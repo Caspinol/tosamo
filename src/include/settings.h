@@ -29,11 +29,13 @@ typedef struct local_settings_t{
 	char           tag[TAG_LEN + 1];
 	char           object_path[OBJ_PATH_LEN];
 	int            log_level;
+	bool           daemonize;
 }local_settings_t;
 
 /* The struct containing local settings is going to be global */
 extern local_settings_t main_settings;
 
+void to_print_local_settings(void);
 ret_code_e to_parse_local_settings(char *);
 
 #endif

@@ -27,6 +27,17 @@ static allowed_keywords_t allowed_keywords[] = {
 /* What we have parsed from the config file */
 static L_HEAD * settings = NULL; 
 
+void to_print_local_settings(void){
+	LOG_LEVEL2("runnning mode -> [%s]",
+		   (main_settings.running_mode == MASTER) ? "MASTER" : "SLAVE");
+	LOG_LEVEL2("my_ip -> [%s]", main_settings.my_ip);
+	LOG_LEVEL2("remote_ip -> [%s]", main_settings.remote_ip);
+	LOG_LEVEL2("port -> [%s]", main_settings.port);
+	LOG_LEVEL2("tag -> [%s]", main_settings.tag);
+	LOG_LEVEL2("object_file -> [%s]", main_settings.object_path);
+	LOG_LEVEL2("daemon mode -> [%s]", main_settings.daemonize ? "TRUE" : "FALSE");
+}
+
 ret_code_e to_parse_local_settings(char *file){
 	ret_code_e r_status = RET_NOK;
 	
@@ -34,11 +45,11 @@ ret_code_e to_parse_local_settings(char *file){
 
 	settings = to_list_create();
 	
-	LOG_LEVEL0("Parsing [%s] for settings", file);
+	fprintf(stdout, "Parsing [%s] for settings", file);
 	
 	FILE *settings_file = fopen(file, "r");
 	if(settings_file == NULL){
-		to_log_err("Cannot read [%s]", file);
+		fprintf(stderr, "Cannot read [%s]", file);
 		goto CLEANUP;
 	}
 	
@@ -58,7 +69,7 @@ ret_code_e to_parse_local_settings(char *file){
 				if(validate_key(key)){
 					/* Dont bother continuing
 					   Just cleanup and exit */
-					to_log_err("Unknown keyword: [%s]", key);
+					fprintf(stderr, "Unknown keyword: [%s]", key);
 					goto CLEANUP;
 				}
 				/* ...so there must be value */
@@ -86,9 +97,10 @@ ret_code_e to_parse_local_settings(char *file){
 	}
 
 	if(populate_main_settings() == RET_NOK){
-		to_log_err("Failed to populate config struct");
+		fprintf(stderr, "Failed to populate config struct");
 		goto CLEANUP;
 	}
+	
 	r_status = RET_OK;
 
  CLEANUP:
