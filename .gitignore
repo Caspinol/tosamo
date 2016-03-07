@@ -1,0 +1,6 @@
+tosamo
+runTest
+test.cfg
+callgrind*
+*.o
+obj/*

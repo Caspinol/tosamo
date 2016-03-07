@@ -1,0 +1,15 @@
+#test config file
+
+#this comment can be used on its own
+
+;this as well
+
+key1=value1
+key2 = value2 ;this can also be used inline
+
+;different comment
+
+key 3 =  value 3 
+
+##end of test file
+

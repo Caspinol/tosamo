@@ -1,0 +1,267 @@
+#include <serialize.h>
+
+/* Stop it from while-ing indefinitely in case of missing '\x1f' */
+#define FIND_COMMA() while(*(here++) != '\x1f' && (here - packet->raw_data) < packet->raw_data_len);
+
+int to_data_deserialize(to_packet_t * packet){
+
+	size_t obj_len = 0;
+	char *there;
+	char *here = there = packet->raw_data;
+	
+
+	/* 
+	   get type 
+	   its only 1 byte
+	*/
+	FIND_COMMA();
+	packet->packet_type = there[0];
+	LOG_LEVEL1("Received [%s] packet", to_tcp_packet_type(packet->packet_type));
+
+	switch(packet->packet_type){
+	case PACKET_UPDATE:
+
+		/* get fileneame */
+		FIND_COMMA();
+		if((here - there) < 1) return -1;
+		
+		memcpy(packet->obj_path, there, here - there - 1);
+		packet->obj_path[here - there - 1] = '\0';
+		
+		/* update the pointer */
+		there = here;
+		
+		/* get len */
+		FIND_COMMA();
+		uint8_t a_len[sizeof(size_t)] = { 0 };
+		
+		memcpy(a_len, there, here - there - 1);
+		for(int i = sizeof(size_t) - 1; i >= 0; i--){
+			obj_len |= (a_len[sizeof(size_t)-1 - i] & 0xff) << i*8;
+		}
+		
+		if(obj_len < 1) return -1;
+		
+		/* got the len so lets alloc the space for it */
+		packet->obj_data_len = obj_len;
+		packet->obj_data = malloc(1 + obj_len * sizeof(char));
+		if(!packet->obj_data) return -1;
+	
+		there = here;
+		/* get the sync data */
+		FIND_COMMA();
+		if(here - there < 1) return -1; 
+		memcpy(packet->obj_data, there, obj_len);
+		packet->obj_data[obj_len] = '\0';
+		
+		/* all is left is crc */
+		there = here;
+		FIND_COMMA();
+		/* crc should only be 1 byte */
+		packet->crc = (*there) & 0xff;
+
+		return 0;
+
+	case PACKET_ACK:
+	case PACKET_NACK:
+		/* Its ACK/NACK so not much to do now */
+		return 0;
+
+	case PACKET_CRC:
+		/* get filename */
+		FIND_COMMA();
+		if((here - there) < 1) return -1;
+		
+		memcpy(packet->obj_path, there, here - there - 1);
+		packet->obj_path[here - there - 1] = '\0';
+		
+		/* update the pointer */
+		there = here;
+		
+		/* all is left is crc */
+		FIND_COMMA();
+		/* crc should only be 1 byte */
+		packet->crc = (*there) & 0xff;
+
+		break;
+	}
+	
+	return 0;
+}
+
+#undef FIND_COMMA
+
+
+/* Packet types
+           |******|****|**********|****|********|****|*********|****|*****|******|
+ UPDATE    | type | \n | FILENAME | \n | LENGHT | \n | PAYLOAD | \n | CRC | \n\n |
+           |******|****|**********|****|********|****|*********|****|*****|******|
+	   |******|******|
+ ACK\NACK  | type | \n\n | 
+	   |******|******|
+	   |******|****|**********|****|*****|******|
+ CRC	   | type | \n | FILENAME | \n | CRC | \n\n |
+	   |******|****|**********|****|*****|******|
+*/
+
+#define COMMA() (*(r_data + here++) =  '\x1f')
+#define DOT()					\
+	do{					\
+		*(r_data + here++) =  '\x1f';	\
+		*(r_data + here++) =  '\x1f';	\
+	}while(0);				\
+	
+
+int to_data_serialize(to_packet_t * packet, L_HEAD *head){
+	
+	int here = 0;           /* currrrent location pointer */
+	size_t packet_len = 0,  /* overal packet length */
+		sync_len = 0;   /* lenght of the acual file data to be synced */
+	char *r_data;           /* alias pointer for packet->raw_data */
+	char *sync_data;        /* Pointer to actual data to be synced for CRC calc */
+	uint8_t chsum = 0;      /* For CRC checksum */
+	char *crc_temp_data;
+	
+	switch(packet->packet_type){
+
+	case PACKET_UPDATE:
+
+		if(!head) return -1;
+		
+		for(L_NODE *n = head->node; n; n=n->next){
+			/* +1 for the '\x1f' separation */
+			KV_PAIR *p = n->data;
+			sync_len += p->vlen;
+		}
+		packet_len = strlen(main_settings.object_path) + sync_len;
+
+		/*
+		  1 for type, 1 for object path, 1 for data,
+		  1 byte for crc result, 2 for '\x1f\x1f'
+		  and sizeof(size_t) for len
+		*/
+		LOG_LEVEL2("Allocating memory for UPDATE packet");
+		r_data = packet->raw_data = malloc(8 + sizeof(size_t) + packet_len * sizeof(char));
+		if(!r_data){
+			to_log_err("Failed to allocate memory for UPDATE packet");
+			return -1;
+		}
+
+		/* First type */
+		*(r_data + here++) =  packet->packet_type;
+		COMMA();
+		
+		/* ...then file name */
+		LOG_LEVEL2("Copying obj file path");
+		memcpy(r_data + here, main_settings.object_path, strlen(main_settings.object_path));
+		here += strlen(main_settings.object_path);
+		COMMA();
+		
+		/* 
+		   then the sync data length and '\x1f'
+		   (s_len might be different size on different systems)
+		*/
+		for(int i = (sizeof(size_t) - 1); i >= 0; i--){
+			
+			*(r_data + here) = (sync_len >> i*8) & 0xff;
+			here++;
+		}
+		COMMA();
+		
+		/* then the actual data */
+		/* Preserve the pointer so we can calculate the CRC of it */
+		sync_data = r_data + here;
+		for(L_NODE *n = head->node; n; n=n->next){
+			KV_PAIR *p = n->data;
+			memcpy(r_data + here, p->value, p->vlen);
+			here += p->vlen;
+		}
+		COMMA();
+		
+		/* and then the crc cherry on top */
+		LOG_LEVEL2("Calculating checksum");
+		chsum = crc(sync_data, sync_len);
+		*(r_data + here++) = (char)chsum;
+		LOG_LEVEL2("Checksum: [%d]", chsum);
+		
+		/* terminate it with two of those */
+		DOT();
+
+		packet->raw_data_len = here;
+		
+		return here;
+
+	case PACKET_CRC:
+
+		if(!head) return -1;
+		
+		for(L_NODE *n = head->node; n; n=n->next){
+			/* +1 for the '\x1f' separation */
+			KV_PAIR *p = n->data;
+			sync_len += p->vlen;
+		}
+
+		crc_temp_data = malloc(sync_len * sizeof(char));
+		if(!crc_temp_data) return -1;
+		
+		LOG_LEVEL2("Allocating memory for CRC check packet");
+		/* Path len + CRC len + 4 for separators */
+		r_data = packet->raw_data = malloc(5 + strlen(main_settings.object_path) * sizeof(char));
+		if(!r_data){
+			to_log_err("Failed to allocate memory for CRC packet");
+			return -1;
+		}
+
+		for(L_NODE *n = head->node; n; n=n->next){
+			KV_PAIR *p = n->data;
+			memcpy(crc_temp_data + here, p->value, p->vlen);
+			here += p->vlen;
+		}
+
+		/* Copy packet type */
+		*(r_data + here++) =  packet->packet_type;
+		COMMA();
+
+		LOG_LEVEL2("Copying obj file path");
+		memcpy(r_data + here, main_settings.object_path, strlen(main_settings.object_path));
+		here += strlen(main_settings.object_path);
+		COMMA();
+		
+		LOG_LEVEL2("Calculating checksum");
+		chsum = crc(crc_temp_data, sync_len);
+		*(r_data + here++) = (char)chsum;
+		LOG_LEVEL2("Checksum: [%d]", chsum);
+
+		DOT();
+
+		packet->raw_data_len = here;
+		
+		return here;
+
+	case PACKET_ACK:
+	case PACKET_NACK:
+
+		LOG_LEVEL2("Allocating memory for ACK/NACK packet");
+		r_data = packet->raw_data = malloc(3);
+		if(!r_data){
+			to_log_err("Failed to allocate memory for ACK/NACK packet");
+			return -1;
+		}
+		/* Just copy packet type */
+		*(r_data + here++) =  packet->packet_type;
+
+		DOT();
+		
+		packet->raw_data_len = here;
+		
+		return here;
+
+	default:
+		to_log_err("Error serializing unknown packet type");
+		return -1;
+	}
+	
+	return -1;
+}
+#undef COMMA
+#undef DOT

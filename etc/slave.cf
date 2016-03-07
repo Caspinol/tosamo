@@ -1,0 +1,24 @@
+slave header
+
+
+#%%
+
+master 1
+
+%%#
+
+slave body
+
+#%%
+master 2
+%%#
+
+slave no change
+
+#%%
+
+master 3
+
+%%#
+
+slave ass

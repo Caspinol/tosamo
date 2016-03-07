@@ -1,0 +1,19 @@
+head
+
+#%%
+
+
+%%#
+
+static stuff
+
+#%%
+
+%%#
+more static stuf
+
+#%%
+
+%%#
+
+even more static stuff
