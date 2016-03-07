@@ -57,7 +57,8 @@ int to_tcp_listen(char const * ip, char const * port){
         
 	if(getaddrinfo(ip, port, &servSide, &servInfo) != 0){
 		to_log_err("Could not get server's info");
-		return -1;
+		sock = -1;
+		goto ERROR;
 	}
 	for(t = servInfo; t != NULL; t = t->ai_next){
 		if((sock = socket(t->ai_family, t->ai_socktype, t->ai_protocol)) == -1){
@@ -78,18 +79,20 @@ int to_tcp_listen(char const * ip, char const * port){
 	
 	if (t == NULL)  {
 		to_log_err("Failed to bind to server");
-		return -1;
+		sock = -1;
+		goto ERROR;
 	}
-	
-	freeaddrinfo(servInfo);
 	
 	if (listen(sock, BACKLOG) == -1) {
 		to_log_err("listen() returned error ");
-		return -1;
+		sock = -1;
+		goto ERROR;
 	}
 	
 	LOG_LEVEL0("Server listening");
 	
+ ERROR:
+	freeaddrinfo(servInfo);
 	return sock;
 }
 

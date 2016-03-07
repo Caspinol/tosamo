@@ -99,18 +99,19 @@ bool to_list_peek(L_HEAD *head, void *key){
 	return false;
 }
 
-void *to_list_find(L_HEAD *head, void *key){
+/* Returns node without removing it from list */
+void * to_list_find(L_HEAD *head, void *key){
 	for(L_NODE *n=head->node; n; n=n->next){
 		KV_PAIR *p = n->data;
 		if(strncmp(p->key, key, strlen(key)) == 0){
-			return p->value;
+			return p;
 		}
 	}
 	return NULL;
 }
 
 /* Returns node and removes it from the list */
-KV_PAIR *to_list_get(L_HEAD *head, void *key){
+void * to_list_get(L_HEAD *head, void *key){
 	L_NODE *prev = NULL;
 	L_NODE *curr = head->node;
 	while(curr){

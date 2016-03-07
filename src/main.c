@@ -14,7 +14,7 @@
 #include "include/utils.h"
 #include "include/log.h"
 
-#define VERSION "0.5.2"
+#define VERSION "0.5.3"
 #define PROGNAME "tosamo"
 #define PROG_VER (PROGNAME " - " VERSION)
 

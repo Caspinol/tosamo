@@ -24,24 +24,25 @@ static allowed_keywords_t allowed_keywords[] = {
 	{ NULL, false }
 };
 
-static L_HEAD * found_settings = NULL;
+/* What we have parsed from the config file */
+static L_HEAD * settings = NULL; 
 
 ret_code_e to_parse_local_settings(char *file){
 	ret_code_e r_status = RET_NOK;
 	
 	char line[LINE];
 
-	found_settings = to_list_create();
+	settings = to_list_create();
 	
 	LOG_LEVEL0("Parsing [%s] for settings", file);
 	
-	FILE *settings = fopen(file, "r");
-	if(settings == NULL){
+	FILE *settings_file = fopen(file, "r");
+	if(settings_file == NULL){
 		to_log_err("Cannot read [%s]", file);
 		goto CLEANUP;
 	}
 	
-	while(fgets(line, LINE, settings) != NULL){
+	while(fgets(line, LINE, settings_file) != NULL){
 		char key[KV_MAX_LEN] = {0}, value[KV_MAX_LEN] = {0};
 		if(line[0] == '#' ||line[0] == ';'|| line[0] == '\n'){
 			continue;
@@ -81,7 +82,7 @@ ret_code_e to_parse_local_settings(char *file){
 			goto CLEANUP;
 		}
 
-		to_list_push(found_settings, kv_pair);
+		to_list_push(settings, kv_pair);
 	}
 
 	if(populate_main_settings() == RET_NOK){
@@ -91,8 +92,8 @@ ret_code_e to_parse_local_settings(char *file){
 	r_status = RET_OK;
 
  CLEANUP:
-	to_list_destroy(found_settings);
-	fclose(settings);
+	to_list_destroy(settings);
+	fclose(settings_file);
 	return r_status;
 }
 
@@ -108,40 +109,33 @@ static ret_code_e validate_key(char const * key){
 
 static ret_code_e populate_main_settings(void){
 
-	KV_PAIR *pair = to_list_get(found_settings, "mode");
+	KV_PAIR *pair = to_list_find(settings, "mode");
 	if(!pair) return RET_NOK;
 	main_settings.running_mode = (strncmp(pair->value, "master", strlen("master"))==0) ? MASTER : SLAVE;
-	to_kvpair_destroy(pair);
 	
-	pair = to_list_get(found_settings, "my_ip");
+	pair = to_list_find(settings, "my_ip");
 	if(!pair) return RET_NOK;
 	strncpy(main_settings.my_ip, pair->value, pair->vlen);
-	to_kvpair_destroy(pair);
 	
-	pair = to_list_get(found_settings, "remote_ip");
+	pair = to_list_find(settings, "remote_ip");
 	if(!pair) return RET_NOK;
 	strncpy(main_settings.remote_ip, pair->value, pair->vlen);
-	to_kvpair_destroy(pair);
 	
-	pair = to_list_get(found_settings, "port");
+	pair = to_list_find(settings, "port");
 	if(!pair) return RET_NOK;
 	strncpy(main_settings.port, pair->value, pair->vlen);
-	to_kvpair_destroy(pair);
 	
-	pair = to_list_get(found_settings, "tag");
+	pair = to_list_find(settings, "tag");
 	if(!pair) return RET_NOK;
 	strncpy(main_settings.tag, pair->value, pair->vlen);
-	to_kvpair_destroy(pair);
 	
-	pair = to_list_get(found_settings, "object_file");
+	pair = to_list_find(settings, "object_file");
 	if(!pair) return RET_NOK;
 	strncpy(main_settings.object_path, pair->value, pair->vlen);
-	to_kvpair_destroy(pair);
 	
-	pair = to_list_get(found_settings, "log_level");
+	pair = to_list_find(settings, "log_level");
 	if(!pair) return RET_NOK;
 	main_settings.log_level = atoi(pair->value);
-	to_kvpair_destroy(pair);
 	
 	return RET_OK;
 }
