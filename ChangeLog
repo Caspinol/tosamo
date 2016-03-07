@@ -1,6 +1,8 @@
 	* Fixes to linked list library
 	* File update is ACK/NACK ed from the slave
-	v0.5.0
+
+
+v0.5.0
 	
 	* Network and object parsing code rewrite
 	* Logging levels added 
