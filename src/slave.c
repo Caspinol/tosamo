@@ -56,9 +56,10 @@ static void *conn_handler(void *client_sock){
 	
 	to_packet_t * request,
 		    *response = to_tcp_prep_packet();
+
 	int sock = *(int*) client_sock;
 	
-	request = to_tcp_read_packet(sock);
+	request = to_tcp_read_packet(sock, false);
 	response->socket = request->socket;
 	
 	LOG_LEVEL3_RAW(request->raw_data, request->raw_data_len,

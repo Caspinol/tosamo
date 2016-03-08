@@ -42,6 +42,7 @@ void to_tcp_packet_destroy(to_packet_t **packet){
 	if((*packet)->raw_data) free((*packet)->raw_data);
 	if((*packet)->obj_data) free((*packet)->obj_data);
 	free(*packet);
+	close((*packet)->socket);
 
 	*packet = NULL;
 }
@@ -145,8 +146,7 @@ int to_tcp_remote_connect(char const * ip, char const * port){
 
 int to_tcp_send_packet(to_packet_t * packet){
   	
-	int n, numbytes, total_bytes = 0;
-	char buffer[MAX_BUF_LEN];
+	int n, total_bytes = 0;
 	int bytes_left = packet->raw_data_len;
 
 	/* send all data to slave */
@@ -162,27 +162,25 @@ int to_tcp_send_packet(to_packet_t * packet){
 	
 	LOG_LEVEL1("Total bytes sent %d\n", total_bytes);
 	
-	/* not sure if timeout is necessary */
-	const struct timeval timeout={.tv_sec=0, .tv_usec=800};
-	setsockopt(packet->socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-	if((numbytes = recv(packet->socket, buffer, MAX_BUF_LEN-1, 0)) == -1){
-		to_log_err("Problem receiving data from server");
-		return -1;
-	}
-	buffer[numbytes] = '\0';
-	
-	close(packet->socket);
 	return total_bytes;
 }
 
-to_packet_t * to_tcp_read_packet(int socket){
+to_packet_t * to_tcp_read_packet(int socket, bool wait){
 
 	int len;
 	char raw_data[MAX_BUF_LEN];
+	struct timeval timeout;
 	to_packet_t * packet;
 	
 	packet = to_tcp_prep_packet();
 	if(!packet) return NULL;
+
+
+	if(wait){
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 5000;
+		setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+	}
 	
 	len = tcp_raw_recv(socket, raw_data);
 	if(!(len > 0)) return NULL;

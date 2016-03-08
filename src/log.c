@@ -13,7 +13,7 @@ static void to_log(int, const char *, va_list);
 void to_log_start(char *progname, bool daemonize){
 	program_name = progname;
 
-	openlog(program_name, LOG_PERROR | LOG_PID, daemonize ? LOG_DAEMON : LOG_USER);
+	openlog(program_name, LOG_PID, daemonize ? LOG_DAEMON : LOG_USER);
 
 	to_log_info("%s - partial file synchronization tool", program_name);
 	to_log_info("Starting...");
@@ -42,7 +42,7 @@ static void to_rawhex(char *buf, int buflen, char **out){
 void to_log_raw(char *buf, int len){
 	char * raw_hex;
 	to_rawhex(buf, len, &raw_hex);
-	syslog(LOG_INFO, "RAW:\n[%s]", raw_hex);
+	syslog(LOG_NOTICE, "RAW:\n[%s]", raw_hex);
 	free(raw_hex);
 }
 
@@ -56,7 +56,7 @@ void to_log_err(const char *fmt, ...){
 void to_log_info(const char *fmt, ...){
 	va_list args;
 	va_start(args, fmt);
-	to_log(LOG_INFO, fmt, args);
+	to_log(LOG_NOTICE, fmt, args);
 	va_end(args);
 }
 

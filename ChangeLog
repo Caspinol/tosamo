@@ -1,3 +1,5 @@
+	* Syncronization is now ACK/NACK ed
+	* Fixed logging to syslog
 	* Fixes to signal handling
 	* Can work in daemon mode
 	* Fixes to linked list library

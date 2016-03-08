@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -42,7 +43,7 @@ void to_tcp_packet_destroy(to_packet_t **);
 int to_tcp_listen(char const *, char const *);
 int to_tcp_remote_connect(const char *, const char *);
 int to_tcp_send_packet(to_packet_t *);
-to_packet_t * to_tcp_read_packet(int);
+to_packet_t * to_tcp_read_packet(int, bool);
 
 
 #endif
