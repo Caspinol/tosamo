@@ -1,11 +1,11 @@
 language: c
 compiler:
-	- clang
-  	- gcc
+- clang
+- gcc
 sudo: false
 
 before_install:
-	- $CC --version
+- $CC --version
 
 script:
-	./bin/tosamo -c etc/m_tosamo.cfg
+- ./bin/tosamo -c etc/m_tosamo.cfg
