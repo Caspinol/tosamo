@@ -1,3 +1,4 @@
+	* Can work in daemon mode
 	* Fixes to linked list library
 	* File update is ACK/NACK ed from the slave
 

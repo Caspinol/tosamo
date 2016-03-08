@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "include/log.h"
 #include "include/utils.h"
@@ -9,9 +10,11 @@ static char * program_name = NULL;
 
 static void to_log(int, const char *, va_list);
 
-void to_log_start(char *progname){
+void to_log_start(char *progname, bool daemonize){
 	program_name = progname;
-	openlog(program_name, LOG_PERROR | LOG_PID, LOG_USER);
+
+	openlog(program_name, LOG_PERROR | LOG_PID, daemonize ? LOG_DAEMON : LOG_USER);
+
 	to_log_info("%s - partial file synchronization tool", program_name);
 	to_log_info("Starting...");
 }

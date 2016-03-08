@@ -51,7 +51,7 @@
 /* detailed logging */
 extern int verbose; 
 
-void to_log_start(char *progname);
+void to_log_start(char *progname, bool daemonize);
 void to_log_raw(char * buf, int len);
 void to_log_err(const char *format, ...);
 void to_log_info(const char *format, ...);
