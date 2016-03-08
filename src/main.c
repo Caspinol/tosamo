@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 #include "include/settings.h"
@@ -14,7 +15,7 @@
 #include "include/utils.h"
 #include "include/log.h"
 
-#define VERSION "0.5.4"
+#define VERSION "0.5.6"
 #define PROGNAME "tosamo"
 #define PROG_VER (PROGNAME " - " VERSION)
 
@@ -29,18 +30,15 @@ local_settings_t main_settings;
 /* main function */
 int main(int argc, char **argv){
 	
-	struct sigaction sa;
-	char *tosamo_cfg = NULL;
-	int argval; //parsing cli arguments
-	pid_t pid;
+	struct sigaction     sa;
+	char                 *tosamo_cfg = NULL;
+	int                  argval; //parsing cli arguments
+	int	             from_child[2] = {-1, -1}; /* for pipe() comms */
 	
 	if(argc < 2){
 		show_usage(EXIT_FAILURE);
 	}
 
-	/* Start the syslogging */
-	to_log_start(PROG_VER);
-	
 	while ((argval = getopt(argc, argv, "dc:VvTh")) != EOF) {
 		switch(argval){
 
@@ -76,36 +74,94 @@ int main(int argc, char **argv){
 	/* Update versbosity level to whatever is higher */
 	if(main_settings.log_level > verbose) verbose = main_settings.log_level;
 
-	LOG_LEVEL3("Setting up signal handlers");
 	sa.sa_handler = &handle_signal;
 	sa.sa_flags = SA_NOCLDWAIT;
 	sigemptyset(&sa.sa_mask);
 	
 	if (sigaction(SIGINT, &sa, NULL) == -1) {
-		to_log_err("Could not handle INT signal"); //is it possible?
+		fprintf(stderr, "Could not handle INT signal\n"); //is it possible?
 	}
 	if (sigaction(SIGHUP, &sa, NULL) == -1) {
-		to_log_err("Could not handle HUP signal"); //is it possible?
+		fprintf(stderr, "Could not handle HUP signal\n"); //is it possible?
 	}
 	/* ignore the children and prevent them turning into zombies */  
 	signal(SIGCHLD, SIG_IGN);
 
+	/* Time to daemonize */
 	if(main_settings.daemonize){
+		pid_t pid;
+		int stat_loc, fds;
+		
+		if(pipe(from_child) != 0){
+			fprintf(stderr,
+				"Failure opening pipe for child comms: [%s]\n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+
 		pid = fork();
 		
 		/* error so no point continuing */
 		if(pid < 0) exit(EXIT_FAILURE);
 
+		if(pid > 0){
+			/* Parent */
+			uint8_t retcode = 0;
+			
+			close(from_child[1]);
+
+			/* Lets see if the child succedded */
+			if((read(from_child[0], &retcode, 1) < 0)) retcode = 0;
+
+			close(from_child[0]);
+
+			if(!retcode){
+				waitpid(pid, &stat_loc, WNOHANG);
+				exit(EXIT_FAILURE);
+			}
+
+			fprintf(stdout,	"All looks good so parent peace out!\n");
+			exit(EXIT_SUCCESS);
+		}
+
+		close(from_child[0]);
+
+		/* Become session leader */
+		setsid();
+
+		/* Apply new permissions */
+		umask(0);
+
+		/* Set working directory 
+		   which is the current dir in this case
+		*/
+		chdir("./");
+
+		/* Close every opened file descriptor */
+		for(fds = sysconf(_SC_OPEN_MAX); fds > 0; fds--){
+			close(fds);
+		}
 	}	
 
-	
+
+	/* Let parent know that the child is ok */
+	if (main_settings.daemonize) {
+		if (write(from_child[1], "\001", 1) < 0) {
+			fprintf(stderr,
+				"Failed to send OK to parent: [%s]\n", strerror(errno));
+		}
+		close(from_child[1]);
+	}
+
+	/* Now init the syslog logging */
+	to_log_start(PROG_VER, main_settings.daemonize);
 	
 	if(main_settings.running_mode == MASTER){
 		mstr_send_update();
 	}else{
 		slave_handle_updates();
 	}
-        
+
+	return EXIT_SUCCESS;
 }
 
 static void handle_signal(int signal){

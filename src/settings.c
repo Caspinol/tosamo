@@ -45,11 +45,11 @@ ret_code_e to_parse_local_settings(char *file){
 
 	settings = to_list_create();
 	
-	fprintf(stdout, "Parsing [%s] for settings", file);
+	fprintf(stdout, "Parsing [%s] for settings\n", file);
 	
 	FILE *settings_file = fopen(file, "r");
 	if(settings_file == NULL){
-		fprintf(stderr, "Cannot read [%s]", file);
+		fprintf(stderr, "Cannot read [%s]\n", file);
 		goto CLEANUP;
 	}
 	
@@ -69,7 +69,7 @@ ret_code_e to_parse_local_settings(char *file){
 				if(validate_key(key)){
 					/* Dont bother continuing
 					   Just cleanup and exit */
-					fprintf(stderr, "Unknown keyword: [%s]", key);
+					fprintf(stderr, "Unknown keyword: [%s]\n", key);
 					goto CLEANUP;
 				}
 				/* ...so there must be value */
@@ -97,7 +97,7 @@ ret_code_e to_parse_local_settings(char *file){
 	}
 
 	if(populate_main_settings() == RET_NOK){
-		fprintf(stderr, "Failed to populate config struct");
+		fprintf(stderr, "Failed to populate config struct\n");
 		goto CLEANUP;
 	}
 	
