@@ -3,21 +3,21 @@ slave header
 
 #%%
 
-slave 1
+master 1
 
 %%#
 
 slave body
 
 #%%
-slave 2
+master 2
 %%#
 
 slave no change
 
 #%%
 
-slave 3
+master 3
 
 %%#
 

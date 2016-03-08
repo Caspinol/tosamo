@@ -15,7 +15,7 @@
 #include "include/utils.h"
 #include "include/log.h"
 
-#define VERSION "0.5.6"
+#define VERSION "0.5.7"
 #define PROGNAME "tosamo"
 #define PROG_VER (PROGNAME " - " VERSION)
 
@@ -26,6 +26,10 @@ static void handle_signal(int);
 
 /* struct containing all program settings */
 local_settings_t main_settings;
+
+/* Controls state of the accept */
+volatile static int running = 1;
+
 
 /* main function */
 int main(int argc, char **argv){
@@ -73,19 +77,6 @@ int main(int argc, char **argv){
 
 	/* Update versbosity level to whatever is higher */
 	if(main_settings.log_level > verbose) verbose = main_settings.log_level;
-
-	sa.sa_handler = &handle_signal;
-	sa.sa_flags = SA_NOCLDWAIT;
-	sigemptyset(&sa.sa_mask);
-	
-	if (sigaction(SIGINT, &sa, NULL) == -1) {
-		fprintf(stderr, "Could not handle INT signal\n"); //is it possible?
-	}
-	if (sigaction(SIGHUP, &sa, NULL) == -1) {
-		fprintf(stderr, "Could not handle HUP signal\n"); //is it possible?
-	}
-	/* ignore the children and prevent them turning into zombies */  
-	signal(SIGCHLD, SIG_IGN);
 
 	/* Time to daemonize */
 	if(main_settings.daemonize){
@@ -142,7 +133,21 @@ int main(int argc, char **argv){
 		}
 	}	
 
+	/* Install signal handlers */
+	sa.sa_handler = &handle_signal;
+	sa.sa_flags = SA_NOCLDWAIT;
+	sigemptyset(&sa.sa_mask);
+	
+	if (sigaction(SIGINT, &sa, NULL) == -1) {
+		fprintf(stderr, "Could not handle INT signal\n"); //is it possible?
+	}
+	if (sigaction(SIGHUP, &sa, NULL) == -1) {
+		fprintf(stderr, "Could not handle HUP signal\n"); //is it possible?
+	}
+	/* ignore the children and prevent them turning into zombies */  
+	signal(SIGCHLD, SIG_IGN);
 
+	
 	/* Let parent know that the child is ok */
 	if (main_settings.daemonize) {
 		if (write(from_child[1], "\001", 1) < 0) {
@@ -158,7 +163,7 @@ int main(int argc, char **argv){
 	if(main_settings.running_mode == MASTER){
 		mstr_send_update();
 	}else{
-		slave_handle_updates();
+		slave_handle_updates(&running);
 	}
 
 	return EXIT_SUCCESS;
@@ -168,11 +173,12 @@ static void handle_signal(int signal){
 	
 	switch(signal){
 	case SIGHUP:
-		to_log_info("Got SIGHUP - so I'm terminating.\nSee ya!");
+		to_log_info("Got SIGHUP - so I'm terminating.");
 		break;
 		
 	case SIGINT:
 		to_log_info("Inerrupted by user with SIGINT.\nSee ya!");
+		running = 0;
 		break;
 		
 	default:

@@ -11,8 +11,8 @@ static void *conn_handler(void *);
 static pthread_t req_handler_th;
 //static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
-void slave_handle_updates(void){
-	int server_sock, req_sock;
+void slave_handle_updates(volatile int *running){
+	int server_sock;
 	struct sockaddr_in client_ip;
 	char client_ip_s[INET_ADDRSTRLEN];
 	socklen_t salen;
@@ -23,21 +23,27 @@ void slave_handle_updates(void){
 		return;
 	}
 	
-	while((req_sock = accept(server_sock, (struct sockaddr *)&client_ip, &salen))){
+	while(*running){
 
-		/* Show us who is connecting */
-		/*inet_ntop(client_ip.sin_family, &client_ip.sin_addr,
-		  client_ip_s, sizeof client_ip_s);*/
-		getnameinfo((struct sockaddr *)&client_ip, sizeof(client_ip), client_ip_s, INET_ADDRSTRLEN,
-			    NULL, 0, NI_NUMERICHOST);
+		int req_sock = accept(server_sock, (struct sockaddr *)&client_ip, &salen);
+		if(0 <= req_sock){
+			
+			/* Show us who is connecting */
+			getnameinfo((struct sockaddr *)&client_ip, sizeof(client_ip),
+				    client_ip_s, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
 
-		/* got request so handle it in a shiny, new, still worm thread */ 
-		if(pthread_create(&req_handler_th, NULL, conn_handler, (void *)&req_sock) < 0){
-			to_log_err("Something went wrong while creating connection handler thread");
-			return;
+			/* got request so handle it in a shiny, new, still worm thread */ 
+			if(pthread_create(&req_handler_th, NULL, conn_handler, (void *)&req_sock) < 0){
+				to_log_err("Something went wrong while creating connection handler thread");
+				return;
+			}
+			
+			/* dont wait for threads to finish */
+			//pthread_detach(req_handler_th);
+
+			/* ...ok maybe wait after all */
+			pthread_join(req_handler_th, NULL);
 		}
-
-		pthread_detach(req_handler_th);
 	}
 	close(server_sock);
 }

@@ -218,7 +218,7 @@ static int tcp_raw_recv(int socket, char *buffer){
 			/* reciever disconnected? */
 			return i;
 		}else{
-			to_log_err("Problem with recv()");
+			to_log_err("Problem in recv(): ERRNO(%s)", strerror(errno));
 		}
 	}
 	

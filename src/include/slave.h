@@ -15,6 +15,6 @@
 #include "utils.h"
 #include "log.h"
 
-void slave_handle_updates(void);
+void slave_handle_updates(volatile int *running);
 
 #endif /* __SLAVE_H__ */
