@@ -15,15 +15,15 @@ void slave_handle_updates(volatile int *running){
 	int server_sock;
 	struct sockaddr_in client_ip;
 	char client_ip_s[INET_ADDRSTRLEN];
-	socklen_t salen;
+	socklen_t salen = 0;
 	
 	server_sock = to_tcp_listen(main_settings.my_ip, main_settings.port);
 	if(server_sock < 0){
 		to_log_err("Failed to set up network listener");
 		return;
 	}
-	
-	while(*running){
+
+	do{
 
 		int req_sock = accept(server_sock, (struct sockaddr *)&client_ip, &salen);
 		if(0 <= req_sock){
@@ -44,7 +44,7 @@ void slave_handle_updates(volatile int *running){
 			/* ...ok maybe wait after all */
 			pthread_join(req_handler_th, NULL);
 		}
-	}
+	}while(*running);
 	close(server_sock);
 }
 
@@ -55,8 +55,7 @@ static void *conn_handler(void *client_sock){
 	uint8_t chsum = 0;
 	bool all_ok = true;
 	
-	to_packet_t * request,
-		    *response = to_tcp_prep_packet();
+	to_packet_t * request = NULL, *response = to_tcp_prep_packet();
 
 	int sock = *(int*) client_sock;
 	/* Prepare the response packet */
@@ -111,10 +110,9 @@ static void *conn_handler(void *client_sock){
 
 	
 	LOG_LEVEL1("Cleaning up thread data...");
-	close(sock);
 	to_tcp_packet_destroy(&request);
 	to_tcp_packet_destroy(&response);
-	to_list_destroy(remote_obj);
-	to_list_destroy(local_obj);
+	if(remote_obj) to_list_destroy(remote_obj);
+	if(local_obj) to_list_destroy(local_obj);
 	pthread_exit(NULL);
 }

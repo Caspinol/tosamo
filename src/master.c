@@ -50,7 +50,6 @@ void mstr_send_update(void){
 		to_log_err("Failed to update remote object");
 	}
 
-	free(obj_data_buff);
 	to_list_destroy(local_obj);
 	to_tcp_packet_destroy(&request);
 	to_tcp_packet_destroy(&response);
