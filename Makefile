@@ -12,7 +12,7 @@ TEST_DIR	= tests
 SRC_DIR 	= src
 
 SRC		= main.c config.c tcp.c settings.c
-SRC		+= serialize.c master.c slave.c
+SRC		+= master.c slave.c
 SRC		+= utils.c log.c crc.c lists.c
 
 INC		= -I$(SRC_DIR)/include

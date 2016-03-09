@@ -77,7 +77,7 @@ static L_HEAD * obj_buffer_chop(char * obj_file_buf, int buflen, char * tag, boo
 
 				to_list_push(file_parts, kv_pair);
 			}else{
-				to_log_err("Closing tag(%s) missing from file", close_tag_ptrn);
+				to_log_err("Closing tag(%s) missing", close_tag_ptrn);
 				free(close_tag_ptrn);
 				to_list_destroy(file_parts);
 				return NULL;
@@ -86,7 +86,7 @@ static L_HEAD * obj_buffer_chop(char * obj_file_buf, int buflen, char * tag, boo
 			otag = strstr(ctag, open_tag_ptrn);
 		}while(otag != NULL && (otag < obj_file_buf + buflen));
 	}else{
-		to_log_err("Opening tag(%s) missing from file", open_tag_ptrn);
+		to_log_err("Opening tag(%s) missing", open_tag_ptrn);
 		free(close_tag_ptrn);
 		to_list_destroy(file_parts);
 		return NULL;

@@ -1,3 +1,4 @@
+
 	* Syncronization is now ACK/NACK ed
 	* Fixed logging to syslog
 	* Fixes to signal handling

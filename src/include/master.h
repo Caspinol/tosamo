@@ -3,7 +3,6 @@
 
 #include "tcp.h"
 #include "config.h"
-#include "serialize.h"
 #include "lists.h"
 #include "log.h"
 

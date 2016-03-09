@@ -133,6 +133,35 @@ void * to_list_get(L_HEAD *head, void *key){
 	return NULL;
 }
 
+/* Writes values of @head into one single @buffer 
+   
+   return number of bytes written to @buffer
+   or -1 on error
+ */
+size_t to_list_2_buf(L_HEAD *head, char **buffer){
+	size_t buflen = 0;
+
+	if(!head && head->count < 1) return -1;
+	
+	for(L_NODE *n = head->node; n; n=n->next){
+		KV_PAIR *p = n->data;
+		buflen += p->vlen;
+	}
+
+	*buffer = malloc(buflen * sizeof(char));
+
+	if(!(*buffer)) return -1;
+
+	int here = 0;
+	for(L_NODE *n = head->node; n; n=n->next){
+		KV_PAIR *p = n->data;
+		memcpy(*buffer + here, p->value, p->vlen);
+		here += p->vlen;
+	}
+
+	return buflen;
+}
+
 void to_list_destroy(L_HEAD *head){
 	L_NODE *n = head->node;
 	L_NODE *nn;

@@ -29,9 +29,9 @@ void slave_handle_updates(volatile int *running){
 		if(0 <= req_sock){
 			
 			/* Show us who is connecting */
-			getnameinfo((struct sockaddr *)&client_ip, sizeof(client_ip),
-				    client_ip_s, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
-
+			inet_ntop(AF_INET, &client_ip.sin_addr, client_ip_s, sizeof client_ip_s);
+			LOG_LEVEL1("Accepting connection from [%s]", client_ip_s);
+			
 			/* got request so handle it in a shiny, new, still worm thread */ 
 			if(pthread_create(&req_handler_th, NULL, conn_handler, (void *)&req_sock) < 0){
 				to_log_err("Something went wrong while creating connection handler thread");
@@ -53,52 +53,39 @@ static void *conn_handler(void *client_sock){
 	L_HEAD * remote_obj = NULL;
 	L_HEAD * local_obj = NULL;
 	uint8_t chsum = 0;
+	bool all_ok = true;
 	
 	to_packet_t * request,
 		    *response = to_tcp_prep_packet();
 
 	int sock = *(int*) client_sock;
+	/* Prepare the response packet */
+	response->socket = sock;
+	response->packet_type = PACKET_NACK;
 	
 	request = to_tcp_read_packet(sock, false);
-	response->socket = request->socket;
-	
-	LOG_LEVEL3_RAW(request->raw_data, request->raw_data_len,
-		       "Raw bytes from socket ********");
-	
-	/* now we need to deserialize the data */
-	if(to_data_deserialize(request)){
-		to_log_err("Error deserializing raw bytes");
-		goto CLEANUP;
-	}
-
-	LOG_LEVEL2("De-serialized data: [%s] for object file: [%s]",
-		   request->obj_data, request->obj_path);
 
 	chsum = crc(request->obj_data, request->obj_data_len);
-
-	
 	if(chsum != request->crc){
 		to_log_err("CRC check failed.\nExpected [%d] but got [%d]",
 			   request->crc, chsum);
-		response->packet_type = PACKET_NACK;
-		/* Let the master know something is NOT OK */
-		to_data_serialize(response, NULL);
-		to_tcp_send_packet(response);
+		
 		goto CLEANUP;
 	}
 	
-	LOG_LEVEL0("CRC check OK!");
-	response->packet_type = PACKET_ACK;
-	/* Let the master know we OK */
-	to_data_serialize(response, NULL);
-	to_tcp_send_packet(response);
-	
+	LOG_LEVEL1("CRC check OK!");
 	
 	remote_obj = obj_buffer_parse(request->obj_data, request->obj_data_len, main_settings.tag);
+	if(!remote_obj){
+		to_log_err("Failed to parse data from master");
+		all_ok = false;
+		goto CLEANUP;
+	}
+
 	local_obj = obj_file_parse(main_settings.object_path, main_settings.tag, true);
 	if(!local_obj){
-		to_log_err("Failed to read local [%s]",
-			   main_settings.object_path);
+		to_log_err("Failed to read local [%s]", main_settings.object_path);
+		all_ok = false;
 		goto CLEANUP;
 	}
 
@@ -110,13 +97,20 @@ static void *conn_handler(void *client_sock){
 		   main_settings.object_path, main_settings.remote_ip);
 
  CLEANUP:
+
+	if(all_ok){
+		response->packet_type = PACKET_ACK;
+	}
+	
+	/* Let the master know we OK */
+	to_tcp_send_packet(response);
+
+	
 	LOG_LEVEL1("Cleaning up thread data...");
-	LOG_LEVEL2("Closing socket");
 	close(sock);
 	to_tcp_packet_destroy(&request);
-	LOG_LEVEL2("Destroying linked lists content");
+	to_tcp_packet_destroy(&response);
 	to_list_destroy(remote_obj);
 	to_list_destroy(local_obj);
-	LOG_LEVEL2("...done. Exiting thread");
 	pthread_exit(NULL);
 }

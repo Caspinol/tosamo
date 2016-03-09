@@ -15,7 +15,7 @@
 #include "include/utils.h"
 #include "include/log.h"
 
-#define VERSION "0.5.8"
+#define VERSION "0.5.9"
 #define PROGNAME "tosamo"
 #define PROG_VER (PROGNAME " - " VERSION)
 
@@ -138,12 +138,8 @@ int main(int argc, char **argv){
 	sa.sa_flags = SA_NOCLDWAIT;
 	sigemptyset(&sa.sa_mask);
 	
-	if (sigaction(SIGINT, &sa, NULL) == -1) {
-		fprintf(stderr, "Could not handle INT signal\n"); //is it possible?
-	}
-	if (sigaction(SIGHUP, &sa, NULL) == -1) {
-		fprintf(stderr, "Could not handle HUP signal\n"); //is it possible?
-	}
+	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGHUP, &sa, NULL);
 	/* ignore the children and prevent them turning into zombies */  
 	signal(SIGCHLD, SIG_IGN);
 

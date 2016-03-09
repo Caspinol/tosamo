@@ -9,7 +9,6 @@
 #include <netinet/in.h>
 
 #include "tcp.h"
-#include "serialize.h"
 #include "config.h"
 #include "settings.h"
 #include "utils.h"

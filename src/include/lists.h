@@ -35,6 +35,7 @@ void to_list_push(L_HEAD *, void *);
 bool to_list_peek(L_HEAD *, void *);
 void *to_list_find(L_HEAD *, void *);
 void *to_list_get(L_HEAD *, void *);
+size_t to_list_2_buf(L_HEAD *head, char **buffer);
 void to_list_destroy(L_HEAD *);
 
 #endif

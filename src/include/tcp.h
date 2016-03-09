@@ -26,6 +26,7 @@ typedef enum to_packet_type {
 	PACKET_CRC
 }to_packet_type;
 
+
 typedef struct to_packet_t {
 	int socket;
 	to_packet_type packet_type; /* Type can be as the enum above */
@@ -44,6 +45,5 @@ int to_tcp_listen(char const *, char const *);
 int to_tcp_remote_connect(const char *, const char *);
 int to_tcp_send_packet(to_packet_t *);
 to_packet_t * to_tcp_read_packet(int, bool);
-
 
 #endif

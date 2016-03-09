@@ -8,6 +8,7 @@
 void mstr_send_update(void){
 
 	L_HEAD *local_obj; //object file on this machine
+	char *obj_data_buff = NULL;
 	to_packet_t *response,
 		*request = to_tcp_prep_packet();
 	
@@ -15,16 +16,20 @@ void mstr_send_update(void){
 	
 	local_obj = obj_file_parse(main_settings.object_path, main_settings.tag, false);
 
-	LOG_LEVEL1("Serializing data");
-	if(to_data_serialize(request, local_obj) < 0){
-		to_log_err("Error serializing data");
+	int obj_data_len = to_list_2_buf(local_obj, &obj_data_buff);
+
+	if(obj_data_len < 0){
+		goto CLEANUP;
 	}
 
-	LOG_LEVEL3_RAW(request->raw_data, request->raw_data_len, "Serialized data dump");
+	/* Update len and pointer to the obj_file buffer */
+	request->obj_data = obj_data_buff;
+	request->obj_data_len = obj_data_len;
 	
 	int socket = to_tcp_remote_connect(main_settings.remote_ip, main_settings.port);	
 	if(socket < 0){
 		to_log_err("Failed to connect to [%s]", main_settings.remote_ip);
+		goto CLEANUP;
 	}
 	request->socket = socket;	
 	
@@ -33,10 +38,6 @@ void mstr_send_update(void){
 	LOG_LEVEL0("Awaiting slave confirmation...");
 	/* Now wait if all was fine on the other side */
 	response = to_tcp_read_packet(request->socket, true);
-	if(to_data_deserialize(response)){
-		to_log_err("Failure deserializing response");
-		goto CLEANUP;
-	}
 
 	if(response->packet_type == PACKET_ACK){
 		LOG_LEVEL0("Remote object file succesfully updated");
