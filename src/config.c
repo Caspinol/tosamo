@@ -167,8 +167,7 @@ int obj_write_to_file(char const *file, L_HEAD const *head){
 	}
 	
 	for(const L_NODE *n=head->node; n; n=n->next){
-		p = n->data;
-		
+		p = n->data;	
 		fprintf(obj_file, "%s", p->value);
 	}
 	

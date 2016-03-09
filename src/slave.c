@@ -69,7 +69,7 @@ static void *conn_handler(void *client_sock){
 	if(chsum != request->crc){
 		to_log_err("CRC check failed.\nExpected [%d] but got [%d]",
 			   request->crc, chsum);
-		
+		all_ok = false;
 		goto CLEANUP;
 	}
 	
@@ -91,7 +91,11 @@ static void *conn_handler(void *client_sock){
 
 	obj_file_replace_tagged_parts(local_obj, remote_obj);
 	
-	obj_write_to_file(main_settings.object_path, local_obj);
+	if(obj_write_to_file(main_settings.object_path, local_obj) < 0){
+		to_log_err("Failed to write the chcnges to [%s]", main_settings.object_path);
+		all_ok = false;
+		goto CLEANUP;
+	}
 	
 	LOG_LEVEL0("Updating [%s] with the latest data from [%s]",
 		   main_settings.object_path, main_settings.remote_ip);

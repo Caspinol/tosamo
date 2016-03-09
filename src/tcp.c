@@ -29,7 +29,7 @@ char * to_tcp_packet_strtype(to_packet_type type){
 to_packet_t * to_tcp_prep_packet(void){
 	to_packet_t * p = malloc(sizeof(to_packet_t));
 	if(!p) return NULL;
-	p->socket = 0;
+	p->socket = -1;
 	p->raw_data = NULL;
 	p->raw_data_len = 0;
 	memset(p->obj_path, 0, OBJ_PATH_LEN);
@@ -41,11 +41,12 @@ to_packet_t * to_tcp_prep_packet(void){
 }
 
 void to_tcp_packet_destroy(to_packet_t **packet){
-	if((*packet)->raw_data) free((*packet)->raw_data);
-	if((*packet)->obj_data) free((*packet)->obj_data);
-	free(*packet);
-	close((*packet)->socket);
-
+	if(*packet){
+		if((*packet)->raw_data) free((*packet)->raw_data);
+		if((*packet)->obj_data) free((*packet)->obj_data);
+		close((*packet)->socket);
+		free(*packet);
+	}
 	*packet = NULL;
 }
 
@@ -132,7 +133,8 @@ int to_tcp_remote_connect(char const * ip, char const * port){
 	}
 	
 	if(t == NULL){
-		to_log_err("Failed to connect to server");
+		to_log_err("Failed to connect to [%s]", ip);
+		freeaddrinfo(servInfo);
 		return -1;
 	}
 
@@ -187,6 +189,8 @@ to_packet_t * to_tcp_read_packet(int socket, bool wait){
 
 
 	if(wait){
+		/* Init the struct to keep valgrind quiet */
+		memset(&timeout, 0, sizeof(timeout));
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 5000;
 		setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
