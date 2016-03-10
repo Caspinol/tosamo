@@ -20,6 +20,8 @@ static allowed_keywords_t allowed_keywords[] = {
 	{ "tag", false },
 	{ "object_file", false },
 	{ "log_level", false },
+	{ "pid_file", false },
+	{ "scan_frequency", false },
 	
 	{ NULL, false }
 };
@@ -36,6 +38,8 @@ void to_print_local_settings(void){
 	LOG_LEVEL2("tag -> [%s]", main_settings.tag);
 	LOG_LEVEL2("object_file -> [%s]", main_settings.object_path);
 	LOG_LEVEL2("daemon mode -> [%s]", main_settings.daemonize ? "TRUE" : "FALSE");
+	LOG_LEVEL2("pid file path -> [%s]", main_settings.pid_file);
+	LOG_LEVEL2("file scan freq -> [%s]", main_settings.scan_frequency);
 }
 
 ret_code_e to_parse_local_settings(char *file){
