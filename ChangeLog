@@ -1,4 +1,6 @@
-
+v0.5.13
+	* No need for CRONTAB, updates ate timed in application
+	* Some more code cleanups
 	* Syncronization is now ACK/NACK ed
 	* Fixed logging to syslog
 	* Fixes to signal handling

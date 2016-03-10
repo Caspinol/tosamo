@@ -39,7 +39,7 @@ void to_print_local_settings(void){
 	LOG_LEVEL2("object_file -> [%s]", main_settings.object_path);
 	LOG_LEVEL2("daemon mode -> [%s]", main_settings.daemonize ? "TRUE" : "FALSE");
 	LOG_LEVEL2("pid file path -> [%s]", main_settings.pid_file);
-	LOG_LEVEL2("file scan freq -> [%s]", main_settings.scan_frequency);
+	LOG_LEVEL2("file scan freq -> [%d]", main_settings.scan_frequency);
 }
 
 ret_code_e to_parse_local_settings(char *file){
@@ -104,6 +104,8 @@ ret_code_e to_parse_local_settings(char *file){
 		fprintf(stderr, "Failed to populate config struct\n");
 		goto CLEANUP;
 	}
+
+	to_print_local_settings();
 	
 	r_status = RET_OK;
 
@@ -152,6 +154,15 @@ static ret_code_e populate_main_settings(void){
 	pair = to_list_find(settings, "log_level");
 	if(!pair) return RET_NOK;
 	main_settings.log_level = atoi(pair->value);
+
+	pair = to_list_find(settings, "scan_frequency");
+	if(!pair) return RET_NOK;
+	main_settings.scan_frequency = atoi(pair->value);
+
+	pair = to_list_find(settings, "pid_file");
+	if(!pair) return RET_NOK;
+	strncpy(main_settings.pid_file, pair->value, pair->vlen);
+
 	
 	return RET_OK;
 }

@@ -41,12 +41,10 @@ to_packet_t * to_tcp_prep_packet(void){
 }
 
 void to_tcp_packet_destroy(to_packet_t **packet){
-	if(*packet){
-		if((*packet)->raw_data) free((*packet)->raw_data);
-		if((*packet)->obj_data) free((*packet)->obj_data);
-		close((*packet)->socket);
-		free(*packet);
-	}
+	if((*packet)->raw_data) free((*packet)->raw_data);
+	if((*packet)->obj_data) free((*packet)->obj_data);
+	close((*packet)->socket);
+	free(*packet);
 	*packet = NULL;
 }
 

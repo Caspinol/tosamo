@@ -4,9 +4,8 @@
  * and send the files to the slave
  */
 
-
-void mstr_send_update(void){
-
+static void do_update(void){
+	
 	L_HEAD *local_obj; //object file on this machine
 	char *obj_data_buff = NULL;
 	to_packet_t *response = NULL, *request = NULL;
@@ -18,7 +17,7 @@ void mstr_send_update(void){
 	}
 	
 	int obj_data_len = to_list_2_buf(local_obj, &obj_data_buff);
-
+	
 	if(obj_data_len < 0){
 		return;
 	}
@@ -29,7 +28,7 @@ void mstr_send_update(void){
 		to_list_destroy(local_obj);
 		return;
 	}
-
+	
 	/* Update len and pointer to the obj_file buffer */
 	request = to_tcp_prep_packet();
 	request->packet_type = PACKET_UPDATE;
@@ -38,7 +37,7 @@ void mstr_send_update(void){
 	request->socket = socket;	
 	
 	to_tcp_send_packet(request);
-
+	
 	LOG_LEVEL0("Awaiting slave confirmation...");
 
 	/* Now wait if all was fine on the other side */
@@ -53,4 +52,13 @@ void mstr_send_update(void){
 	to_list_destroy(local_obj);
 	to_tcp_packet_destroy(&request);
 	to_tcp_packet_destroy(&response);
+
+	return;
+}
+
+void mstr_send_update(void){
+
+	to_timed_init_job("Slave update", main_settings.scan_frequency);
+
+	to_timed_run_periodic_job(do_update);
 }

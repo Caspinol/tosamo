@@ -21,7 +21,6 @@ void slave_handle_updates(volatile int *running){
 	}
 
 	do{
-
 		int req_sock = to_tcp_accept(server_sock);
 		if(0 <= req_sock){
 			
@@ -30,7 +29,7 @@ void slave_handle_updates(volatile int *running){
 				to_log_err("Something went wrong while creating connection handler thread");
 				return;
 			}
-
+			
 			/* ...ok maybe wait after all */
 			pthread_join(req_handler_th, NULL);
 		}
@@ -97,7 +96,6 @@ static void *conn_handler(void *client_sock){
 	
 	/* Let the master know we OK */
 	to_tcp_send_packet(response);
-
 	
 	LOG_LEVEL1("Cleaning up thread data...");
 	to_tcp_packet_destroy(&request);

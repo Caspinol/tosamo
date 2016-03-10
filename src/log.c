@@ -56,7 +56,7 @@ void to_log_err(const char *fmt, ...){
 void to_log_info(const char *fmt, ...){
 	va_list args;
 	va_start(args, fmt);
-	to_log(LOG_INFO, fmt, args);
+	to_log(LOG_NOTICE, fmt, args);
 	va_end(args);
 }
 
