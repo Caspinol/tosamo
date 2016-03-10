@@ -17,8 +17,6 @@
 #include "crc.h"
 #include "log.h"
 
-#define ADDR_SIZE 16
-
 typedef enum to_packet_type {
 	PACKET_UPDATE = 0,
 	PACKET_ACK,
@@ -42,6 +40,7 @@ char * to_tcp_packet_type(to_packet_type);
 to_packet_t * to_tcp_prep_packet(void);
 void to_tcp_packet_destroy(to_packet_t **);
 int to_tcp_listen(char const *, char const *);
+int to_tcp_accept(int socket);
 int to_tcp_remote_connect(const char *, const char *);
 int to_tcp_send_packet(to_packet_t *);
 to_packet_t * to_tcp_read_packet(int, bool);

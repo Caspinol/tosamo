@@ -2,6 +2,7 @@
 
 /* It will run specified function periodically */
 
-void run_periodic_job(void (*per_func)(), periodic_job_t *job){
+void run_periodic_job(void (*fun_job)(), periodic_job_t *job){
+
 	
 }

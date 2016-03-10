@@ -13,10 +13,7 @@ static pthread_t req_handler_th;
 
 void slave_handle_updates(volatile int *running){
 	int server_sock;
-	struct sockaddr_in client_ip;
-	char client_ip_s[INET_ADDRSTRLEN];
-	socklen_t salen = 0;
-	
+        
 	server_sock = to_tcp_listen(main_settings.my_ip, main_settings.port);
 	if(server_sock < 0){
 		to_log_err("Failed to set up network listener");
@@ -25,21 +22,14 @@ void slave_handle_updates(volatile int *running){
 
 	do{
 
-		int req_sock = accept(server_sock, (struct sockaddr *)&client_ip, &salen);
+		int req_sock = to_tcp_accept(server_sock);
 		if(0 <= req_sock){
-			
-			/* Show us who is connecting */
-			inet_ntop(AF_INET, &client_ip.sin_addr, client_ip_s, sizeof client_ip_s);
-			LOG_LEVEL1("Accepting connection from [%s]", client_ip_s);
 			
 			/* got request so handle it in a shiny, new, still worm thread */ 
 			if(pthread_create(&req_handler_th, NULL, conn_handler, (void *)&req_sock) < 0){
 				to_log_err("Something went wrong while creating connection handler thread");
 				return;
 			}
-			
-			/* dont wait for threads to finish */
-			//pthread_detach(req_handler_th);
 
 			/* ...ok maybe wait after all */
 			pthread_join(req_handler_th, NULL);

@@ -100,6 +100,24 @@ int to_tcp_listen(char const * ip, char const * port){
 	return sock;
 }
 
+int to_tcp_accept(int socket){
+	struct sockaddr_in client_ip;
+	char client_ip_s[INET_ADDRSTRLEN] = {0};
+	socklen_t salen = 0;
+
+	int req_sock = accept(socket, (struct sockaddr *)&client_ip, &salen);
+	if(0 > req_sock){
+		to_log_err("Error accepting connection: [%s]", strerror(errno));
+		return req_sock;
+	}else{
+		/* Show us who is connecting */
+		inet_ntop(AF_INET, &client_ip.sin_addr, client_ip_s, sizeof client_ip_s);
+		LOG_LEVEL1("Accepting connection from [%s]", client_ip_s);
+
+		return req_sock;
+	}
+}
+
 int to_tcp_remote_connect(char const * ip, char const * port){
 	
 	struct addrinfo servSide, *servInfo, *t;
