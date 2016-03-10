@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/wait.h>
 
 #include "include/settings.h"
@@ -15,7 +16,7 @@
 #include "include/utils.h"
 #include "include/log.h"
 
-#define VERSION "0.5.13"
+#define VERSION "0.5.15"
 #define PROGNAME "tosamo"
 #define PROG_VER (PROGNAME " - " VERSION)
 
@@ -30,6 +31,7 @@ local_settings_t main_settings;
 /* Controls state of the accept */
 volatile static int running = 1;
 
+static pid_t tosamo_pid;
 
 /* main function */
 int main(int argc, char **argv){
@@ -78,14 +80,26 @@ int main(int argc, char **argv){
 	/* Update versbosity level to whatever is higher */
 	if(main_settings.log_level > verbose) verbose = main_settings.log_level;
 
+	/* Now init the syslog logging */
+	to_log_start(PROG_VER, main_settings.daemonize);
+	
 	/* Time to daemonize */
 	if(main_settings.daemonize){
-		pid_t pid;
-		int stat_loc, fds;
-		
+		pid_t     pid;
+		int       stat_loc, fds;
+		int devnull;
+
+		devnull = open("/dev/null", O_RDWR);
+		if (devnull < 0) {
+			to_log_err("Failed opening /dev/null: %s", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		dup2(devnull, STDIN_FILENO);
+		close(devnull);
+
+		/* pipe will help to confirm that daemonization was succesful */
 		if(pipe(from_child) != 0){
-			fprintf(stderr,
-				"Failure opening pipe for child comms: [%s]\n", strerror(errno));
+			to_log_err("Failure opening pipe for child comms: [%s]\n", strerror(errno));
 			exit(EXIT_FAILURE);
 		}
 
@@ -110,11 +124,9 @@ int main(int argc, char **argv){
 				exit(EXIT_FAILURE);
 			}
 
-			fprintf(stdout,	"All looks good so parent peace out!\n");
+			to_log_info("All looks good so parent peace out!\n");
 			exit(EXIT_SUCCESS);
 		}
-
-		close(from_child[0]);
 
 		/* Become session leader */
 		setsid();
@@ -122,15 +134,9 @@ int main(int argc, char **argv){
 		/* Apply new permissions */
 		umask(0);
 
-		/* Set working directory 
-		   which is the current dir in this case
-		*/
-		chdir("./");
+		/* Set working directory */
+		chdir("/");
 
-		/* Close every opened file descriptor */
-		for(fds = sysconf(_SC_OPEN_MAX); fds > 0; fds--){
-			close(fds);
-		}
 	}	
 
 	/* Install signal handlers */
@@ -143,19 +149,29 @@ int main(int argc, char **argv){
 	/* ignore the children and prevent them turning into zombies */  
 	signal(SIGCHLD, SIG_IGN);
 
-	
+
+	/* Time to write the pid */
+	tosamo_pid = getpid();
+	FILE *fp = fopen(main_settings.pid_file, "w");
+	if(fp){
+		fprintf(fp, "%d\n", tosamo_pid);
+		fclose(fp);
+	}else{
+		to_log_err("Failed to create PID file: [%s]", strerror(errno));
+		exit(EXIT_FAILURE);
+	}	
+
 	/* Let parent know that the child is ok */
 	if (main_settings.daemonize) {
+
+		close(from_child[0]);
+		
 		if (write(from_child[1], "\001", 1) < 0) {
-			fprintf(stderr,
-				"Failed to send OK to parent: [%s]\n", strerror(errno));
+			to_log_err("Failed to send OK to parent: [%s]", strerror(errno));
 		}
 		close(from_child[1]);
 	}
 
-	/* Now init the syslog logging */
-	to_log_start(PROG_VER, main_settings.daemonize);
-	
 	if(main_settings.running_mode == MASTER){
 		mstr_send_update();
 	}else{
