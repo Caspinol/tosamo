@@ -1,0 +1,38 @@
+#!/bin/sh
+
+BIN_DIR=/usr/local/sbin
+PROGNAME=tosamod
+PROC=$BIN_DIR/$PROGNAME
+PID_FILE=/var/run/tosamo.pid
+
+CONF_FILE=/usr/local/etc/tosamod/tosamo.conf
+ARGS="-d -c $CONF_FILE"
+
+#test -f $PROC || exit 0
+#test -f $CONF_FILE || exit 0
+
+case "$1" in
+  start)
+	echo -n "Starting $PROGNAME..."
+	$PROC $ARGS
+	if [ -f $PID_FILE ] && killall -0 `cat $PID_FILE`
+	then
+		echo "Success"
+	else
+		echo "Failure"
+	fi	
+	;;
+  stop)
+	echo -n "Stopping $PROGNAME: "
+        [ -f $PID_FILE ] && kill -TERM `cat $PID_FILE`
+	echo "...OK"
+	;;
+  restart)
+	sh $0 stop quiet
+	sleep 3
+	sh $0 start
+	;;
+  *)
+        echo "Usage: /etc/init.d/$PROGNAME {start|stop|restart}"
+        exit 1
+esac

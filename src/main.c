@@ -16,7 +16,8 @@
 #include "include/utils.h"
 #include "include/log.h"
 
-#define VERSION "0.5.15"
+#include "include/configure.h"
+
 #define PROGNAME "tosamo"
 #define PROG_VER (PROGNAME " - " VERSION)
 
@@ -30,8 +31,6 @@ local_settings_t main_settings;
 
 /* Controls state of the accept */
 volatile static int running = 1;
-
-static pid_t tosamo_pid;
 
 /* main function */
 int main(int argc, char **argv){
@@ -86,8 +85,8 @@ int main(int argc, char **argv){
 	/* Time to daemonize */
 	if(main_settings.daemonize){
 		pid_t     pid;
-		int       stat_loc, fds;
-		int devnull;
+		int       stat_loc;
+		int       devnull;
 
 		devnull = open("/dev/null", O_RDWR);
 		if (devnull < 0) {
@@ -151,10 +150,9 @@ int main(int argc, char **argv){
 
 
 	/* Time to write the pid */
-	tosamo_pid = getpid();
 	FILE *fp = fopen(main_settings.pid_file, "w");
 	if(fp){
-		fprintf(fp, "%d\n", tosamo_pid);
+		fprintf(fp, "%d\n", (int)getpid());
 		fclose(fp);
 	}else{
 		to_log_err("Failed to create PID file: [%s]", strerror(errno));

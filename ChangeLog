@@ -1,4 +1,5 @@
-v0.5.14
+v0.6.0
+	* Added startup scripts for OSX and Linux
 	* Create PID file when in daemon mode
 	* No need for CRONTAB, updates ate timed in application
 	* Some more code cleanups
