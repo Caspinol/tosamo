@@ -22,7 +22,7 @@ INC		= -I$(SRC_DIR)/include
 
 DEFINE		=
 
-LFLAGS 		= 
+LFLAGS 		= -pthread
 
 CFLAGS 		= -Wall -g -ggdb -std=gnu99
 CFLAGS		+= -pthread
@@ -58,6 +58,8 @@ $(BUILD):
 $(TEST_DIR):
 	@echo "MK DIR	-	 $@"
 	@mkdir -p $@
+
+maketest:
 
 install:
 	@echo "Installing"
