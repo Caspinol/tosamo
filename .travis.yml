@@ -9,4 +9,4 @@ before_install:
 
 script:
 - make
-- ./bin/tosamo_test
+- ./tests/tosamo_test
