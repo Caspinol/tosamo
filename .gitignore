@@ -1,6 +1,8 @@
-tosamo
-runTest
+
 test.cfg
 callgrind*
 *.o
 obj/*
+bin/tosamod
+tests/tosamo_test
+.swp
