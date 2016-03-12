@@ -117,7 +117,29 @@ void TestListStuff(CuTest *tc){
 	CuAssertPtrEquals(tc, exp1, NULL);
 }
 
-CuSuite* TestUtilsModule(){
+void TestObjHandling(CuTest *tc){
+	L_HEAD *head_remote = NULL,
+		*head_local = NULL;
+
+        head_remote = obj_file_parse("tests/test_obj_r.cfg", "#%%", false);
+	head_local = obj_file_parse("tests/test_obj_l.cfg", "#%%", true);
+
+	CuAssertPtrNotNull(tc, head_remote);
+	CuAssertPtrNotNull(tc, head_local);
+
+	CuAssert(tc, "Local should have more parts", head_remote->count < head_local->count);
+
+	obj_file_replace_tagged_parts(head_local, head_remote);
+
+	/* head_local should contain the remote stuff now */
+	KV_PAIR *kv = to_list_find(head_local, "2");
+	CuAssertStrEquals(tc, "#%%\nremote 2\n%%#", kv->value);
+	
+	to_list_destroy(head_local);
+	to_list_destroy(head_remote);
+}
+
+CuSuite* TestWholeLot(void){
 	
 	CuSuite* suite = CuSuiteNew();
 
@@ -126,7 +148,11 @@ CuSuite* TestUtilsModule(){
 	SUITE_ADD_TEST(suite, TestSubstrDelete);
 	SUITE_ADD_TEST(suite, TestItos);
 	SUITE_ADD_TEST(suite, TestReverseStr);
+
+	SUITE_ADD_TEST(suite, TestListStuff);
+
 	SUITE_ADD_TEST(suite, TestSettingsParser);
+	SUITE_ADD_TEST(suite, TestObjHandling);
 
 	return suite;
 }
