@@ -1,17 +1,24 @@
-TOSAMO - syncronise parts of configuration files across linux servers.
+TOSAMO - syncronise parts of configuration files across linux and/or OSX machines.
 
 When you need to synchronize "parts" of a config file look no further...
 
-Imagine you have a file.conf on server A and file.conf on server B 
-and you want to synchronize just parts of the file.conf simply envelop
-that part in a tag "#%%" at begining and "%%#" at the end and run tosamo.
+WHY:
+	Imagine you have a file.conf on server A and file.conf on server B.
+	The configuration file contains parts that are common to both servers but also
+	configuration bits specific to machine its running on (i.e bind interface).
 
-It operates as master-slave to assuming A is master and B - slave,
+HOW:
+	Simply envelop the common parts of the file with a tag i.e
 
-run "tosamo -m file.conf" on server A
-and "tosamo -s file.conf" on server B
+	#%% as opening tag
+	    and
+	%%# as closing tag (You can specify different tags in the config file.)
 
-run "tosamo -h" for help
+	and start the program with:
 
-This is still fresh project made mainly for fun and to get some experience with C
-but if someone finds it usefull - AWESOME!!!
+	"/etc/init.d/rc.tosamod start" - on a Linux system
+	"launchctl load -w /Library/LaunchDaemons/net.catdamnit.tosamod.plist" - on OSX
+
+	The program works in master/slave model so you need to specify the master machine and slave.
+
+	Master always uploads to slave.

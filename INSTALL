@@ -1,0 +1,6 @@
+Installation steps:
+
+	     git clone https://github.com/Caspinol/tosamo.git
+	     cd ./tosamo
+	     make
+	     sudo make install
