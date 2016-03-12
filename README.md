@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Caspinol/tosamo.svg?branch=master)](https://travis-ci.org/Caspinol/tosamo)
+
 TOSAMO - syncronise parts of configuration files across linux and/or OSX machines.
 
 When you need to synchronize "parts" of a config file look no further...
