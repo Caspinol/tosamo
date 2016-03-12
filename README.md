@@ -14,11 +14,10 @@ HOW:
 	    and
 	%%# as closing tag (You can specify different tags in the config file.)
 
-	and start the program with:
+and start the program with:
 
 	"/etc/init.d/rc.tosamod start" - on a Linux system
 	"launchctl load -w /Library/LaunchDaemons/net.catdamnit.tosamod.plist" - on OSX
 
-	The program works in master/slave model so you need to specify the master machine and slave.
-
-	Master always uploads to slave.
+The program works in master/slave model so you need to specify the master machine and slave.
+Master always uploads to slave.
