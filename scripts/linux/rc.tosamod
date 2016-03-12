@@ -29,25 +29,28 @@ case "$1" in
 	  echo "Failure"
       fi	
       ;;
+  
   stop)
       echo -n "Stopping $PROGNAME: "
       [ -f $PID_FILE ] && kill -TERM `cat $PID_FILE`
       echo "...OK"
       ;;
+  
   restart)
       sh $0 stop quiet
       sleep 3
       sh $0 start
       ;;
+  
   status)
-      if [ -f $PID_FILE ] && kill -0 `cat $PID_FILE`
-      then
+      if [ -f $PID_FILE ] && kill -0 `cat $PID_FILE`; then
 	  echo "Process running"
-	  exit 0
       else
 	  echo "Process not running"
 	  exit 1
-      fi 
+      fi
+      ;;
+ 
   *)
       echo "Usage: /etc/init.d/$PROGNAME {start|stop|restart|status}"
       exit 1

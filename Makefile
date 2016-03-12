@@ -18,6 +18,8 @@ SRC		= main.c config.c tcp.c settings.c
 SRC		+= master.c slave.c timed.c
 SRC		+= utils.c log.c crc.c lists.c
 
+TSRC		= CuTest.c runTests.c setTests.c
+
 INC		= -I$(SRC_DIR)/include
 
 DEFINE		=
@@ -34,10 +36,12 @@ TCFLAGS		+= $(INC) $(DEFINE)
 VPATH		= src
 
 OBJS		= $(addprefix $(BUILD)/, $(SRC:.c=.o))
+# Build objects out of test files
+TOBJS		= $(addprefix $(TEST_DIR)/, $(TSRC:.c=.o))
 
 .PHONY: all dir clean show maketest install uninstall
 
-all: $(BIN_DIR)/$(BIN_NAME) maketest
+all: $(BIN_DIR)/$(BIN_NAME) $(TEST_DIR)/$(TEST_BIN_NAME)
 
 $(BUILD)/%.o: %.c | dir
 	@echo "CC 	-	$<"
@@ -49,17 +53,20 @@ $(BIN_DIR)/$(BIN_NAME): $(OBJS)
 	@echo "SIZE	OF	$(BIN_NAME)"
 	@$(SIZE) $(BIN_DIR)/$(BIN_NAME)
 
-dir: $(BUILD) $(TEST_DIR)
+dir: $(BUILD)
 
 $(BUILD):
 	@echo "MK DIR	-	 $@"
 	@mkdir -p $@
 
-$(TEST_DIR):
-	@echo "MK DIR	-	 $@"
-	@mkdir -p $@
+$(TEST_DIR)/%.o: %.c
+	@echo "CC	-	$<"
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-maketest:
+$(TEST_DIR)/$(TEST_BIN_NAME): $(TOBJS) $(filter-out $(BUILD)/main.o, $(OBJS))
+	@echo "LD	-	$(TEST_BIN_NAME)"
+	@$(CC) $(LFLAGS) $^ -o $@
+	@echo "Tests build - run: make test"
 
 install:
 	@echo "Installing"

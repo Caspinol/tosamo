@@ -8,4 +8,5 @@ before_install:
 - $CC --version
 
 script:
-- ./bin/tosamo -c etc/m_tosamo.cfg
+- make
+- ./bin/tosamo_test
