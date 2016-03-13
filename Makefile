@@ -69,9 +69,6 @@ $(TEST_DIR)/$(TEST_BIN_NAME): $(TOBJS) $(filter-out $(BUILD)/main.o, $(OBJS))
 	@echo "Tests build - run: make test"
 
 install:
-	@echo "Installing"
-	@echo "Creating config directory"
-	@install -d $(INSTALL_PFX)/etc/$(BIN_NAME)
 	@echo "Installing config file"
 	@install etc/tosamo.cfg $(INSTALL_PFX)/etc/
 	@echo "Installing binaries"
@@ -82,7 +79,7 @@ ifeq ($(UNAME), Darwin)
 	@install scripts/osx/net.catdamnit.tosamod.plist /Library/LaunchDaemons/
 else
 	@echo "On Linux"
-	@install scripts/linux/rc.tosamod /etc/init.d
+	@install scripts/linux/tosamod /etc/init.d/
 endif
 
 uninstall:
@@ -95,7 +92,7 @@ ifeq ($(UNAME), Darwin)
 	@rm -f /Library/LaunchDaemons/net.catdamnit.tosamod.plist
 else
 	@echo "On Linux"
-	@rm -f /etc/init.d/rc.tosamod
+	@rm -f /etc/init.d/tosamod
 endif
 
 clean:
