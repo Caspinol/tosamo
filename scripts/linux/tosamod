@@ -5,7 +5,7 @@ PROGNAME=tosamod
 PROC=$BIN_DIR/$PROGNAME
 PID_FILE=/var/run/tosamo.pid
 
-CONF_FILE=/usr/local/etc/tosamod/tosamo.conf
+CONF_FILE=/usr/local/etc/tosamo.cfg
 ARGS="-d -c $CONF_FILE"
 
 
