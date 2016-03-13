@@ -53,9 +53,13 @@ $(BIN_DIR)/$(BIN_NAME): $(OBJS)
 	@echo "SIZE	OF	$(BIN_NAME)"
 	@$(SIZE) $(BIN_DIR)/$(BIN_NAME)
 
-dir: $(BUILD)
+dir: $(BUILD) $(BIN_DIR)
 
 $(BUILD):
+	@echo "MK DIR	-	 $@"
+	@mkdir -p $@
+
+$(BIN_DIR):
 	@echo "MK DIR	-	 $@"
 	@mkdir -p $@
 
@@ -97,15 +101,9 @@ endif
 
 clean:
 	@echo "Deleting *.o files"
-	@$(RM) $(OBJS) | true
+	@$(RM) $(OBJS) $(TOBJS) | true
 	@echo "Deleting $(BIN_NAME) binary"
 	@$(RM) $(BIN_DIR)/$(BIN_NAME) | true
 	@echo "Deleting test binary"
 	@$(RM) $(TEST_DIR)/$(TEST_BIN_NAME) | true
 	@echo "Cleanup complete!"
-
-show:
-	@echo "Source dir: $(SRC)"
-	@echo "Build dir: $(BUILD)"
-	@echo "Bin dir: $(BIN_DIR)"
-	@echo "obj files: $(OBJS)"
