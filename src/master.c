@@ -4,11 +4,14 @@
  * and send the files to the slave
  */
 
+static unsigned char last_crc = 0;
+
 static void do_update(void){
 	
 	L_HEAD *local_obj; //object file on this machine
 	char *obj_data_buff = NULL;
 	to_packet_t *response = NULL, *request = NULL;
+	unsigned char this_crc = 0;
 	
 	local_obj = obj_file_parse(main_settings.object_path, main_settings.tag, false);
 	if(!local_obj){
@@ -16,11 +19,21 @@ static void do_update(void){
 		return;
 	}
 	
-	int obj_data_len = to_list_2_buf(local_obj, &obj_data_buff);
-	
+	int obj_data_len = to_list_2_buf(local_obj, &obj_data_buff);	
 	if(obj_data_len < 0){
 		return;
 	}
+	
+	/* Check crc if same as last one dont bother sending update */
+	this_crc = crc(obj_data_buff, obj_data_len);
+	if(this_crc == last_crc){
+		LOG_LEVEL0("File unchanged. No update");
+		free(obj_data_buff);
+		to_list_destroy(local_obj);
+		return;
+	}
+
+	last_crc = this_crc;
 	
 	int socket = to_tcp_remote_connect(main_settings.remote_ip, main_settings.port);	
 	if(socket < 0){
