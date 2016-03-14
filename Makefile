@@ -72,6 +72,9 @@ $(TEST_DIR)/$(TEST_BIN_NAME): $(TOBJS) $(filter-out $(BUILD)/main.o, $(OBJS))
 	@$(CC) $(LFLAGS) $^ -o $@
 	@echo "Tests build - run: make test"
 
+test:
+	$(TEST_DIR)/$(TEST_BIN_NAME)
+
 install:
 	@echo "Installing config file"
 	@install etc/tosamo.cfg $(INSTALL_PFX)/etc/

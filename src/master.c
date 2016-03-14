@@ -33,7 +33,6 @@ static void do_update(void){
 		return;
 	}
 
-	last_crc = this_crc;
 	
 	int socket = to_tcp_remote_connect(main_settings.remote_ip, main_settings.port);	
 	if(socket < 0){
@@ -58,6 +57,8 @@ static void do_update(void){
 
 	if(response->packet_type == PACKET_ACK){
 		LOG_LEVEL0("Remote object file succesfully updated");
+		/* Update CRC only after sussesfull update */
+		last_crc = this_crc;
 	}else{
 		to_log_err("Failed to update remote object");
 	}
