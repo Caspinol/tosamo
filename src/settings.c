@@ -71,10 +71,9 @@ ret_code_e to_parse_local_settings(char *file){
 				key[i] = '\0';
 				to_str_trim(key);
 				if(validate_key(key)){
-					/* Dont bother continuing
-					   Just cleanup and exit */
-					fprintf(stderr, "Unknown keyword: [%s]\n", key);
-					goto CLEANUP;
+					
+					fprintf(stderr, "Skipping unknown keyword: [%s]\n", key);
+					continue;
 				}
 				/* ...so there must be value */
 				for(j=i; j<LINE; j++){

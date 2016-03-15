@@ -18,9 +18,6 @@
 
 #include "include/configure.h"
 
-#define PROGNAME "tosamo"
-#define PROG_VER (PROGNAME " - " VERSION)
-
 /* local definitions */
 static void show_version();
 static void show_usage(int);
