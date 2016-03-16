@@ -71,7 +71,7 @@ int main(int argc, char **argv){
 	}
 
 	/* Start by parsing settings */
-	if(to_parse_local_settings(tosamo_cfg) == RET_NOK) exit(EXIT_FAILURE);
+	if(to_parse_local_settings(tosamo_cfg)) exit(EXIT_FAILURE);
 
 	/* Update versbosity level to whatever is higher */
 	if(main_settings.log_level > verbose) verbose = main_settings.log_level;
@@ -168,7 +168,7 @@ int main(int argc, char **argv){
 	}
 
 	if(main_settings.running_mode == MASTER){
-		mstr_send_update();
+		master_monitor_files();
 	}else{
 		slave_handle_updates(&running);
 	}

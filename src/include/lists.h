@@ -33,6 +33,7 @@ L_HEAD *to_list_create();
 void to_list_replace(L_HEAD *, void *);
 void to_list_push(L_HEAD *, void *);
 bool to_list_peek(L_HEAD *, void *);
+int to_list_get_count(L_HEAD *head, void *key);
 void *to_list_find(L_HEAD *, void *);
 void *to_list_get(L_HEAD *, void *);
 size_t to_list_2_buf(L_HEAD *head, char **buffer);

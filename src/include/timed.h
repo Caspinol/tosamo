@@ -8,11 +8,11 @@
 
 #include "log.h"
 
-typedef void (*fun_job)(void);
+typedef void (*fun_job)(void *data);
 
 int to_timed_init_job(char *job_name, int frequency);
 void to_timed_start_job(void);
 void to_timed_stop_job(void);
-void to_timed_run_periodic_job(fun_job do_job);
+void to_timed_run_periodic_job(fun_job do_job, void *data);
 
 #endif /* __TIMED_H__ */

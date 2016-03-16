@@ -70,23 +70,23 @@ static void *conn_handler(void *client_sock){
 		goto CLEANUP;
 	}
 
-	local_obj = obj_file_parse(main_settings.object_path, main_settings.tag, true);
+	local_obj = obj_file_parse(request->obj_path, main_settings.tag, true);
 	if(!local_obj){
-		to_log_err("Failed to read local [%s]", main_settings.object_path);
+		to_log_err("Failed to read local [%s]", request->obj_path);
 		all_ok = false;
 		goto CLEANUP;
 	}
 
 	obj_file_replace_tagged_parts(local_obj, remote_obj);
 	
-	if(obj_write_to_file(main_settings.object_path, local_obj) < 0){
-		to_log_err("Failed to write the chcnges to [%s]", main_settings.object_path);
+	if(obj_write_to_file(request->obj_path, local_obj) < 0){
+		to_log_err("Failed to write the chcnges to [%s]", request->obj_path);
 		all_ok = false;
 		goto CLEANUP;
 	}
 	
 	LOG_LEVEL0("Updating [%s] with the latest data from [%s]",
-		   main_settings.object_path, main_settings.remote_ip);
+		   request->obj_path, main_settings.remote_ip);
 
  CLEANUP:
 

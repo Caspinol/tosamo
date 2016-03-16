@@ -7,6 +7,10 @@ void TestSettingsParser(CuTest *tc){
 	CuAssertStrEquals(tc, "localhost", main_settings.remote_ip);
 	CuAssertStrEquals(tc, "9666", main_settings.port);
 	CuAssertStrEquals(tc, "#%%", main_settings.tag);
+	CuAssertIntEquals(tc, 3, main_settings.object_count);
+	CuAssertStrEquals(tc, "test.cfg", main_settings.object_path[0]);
+	CuAssertStrEquals(tc, "test2.cfg", main_settings.object_path[1]);
+	CuAssertStrEquals(tc, "test3.cfg", main_settings.object_path[2]);
 }
 
 void TestTrim(CuTest *tc){

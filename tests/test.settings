@@ -25,6 +25,8 @@ tag = #%%
 
 #file to track and syncronise
 object_file = test.cfg
+object_file = test2.cfg
+object_file = test3.cfg
 
 # Where to store the pid file
 pid_file = /var/run/tosamo.pid

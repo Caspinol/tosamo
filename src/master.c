@@ -4,16 +4,18 @@
  * and send the files to the slave
  */
 
+static void *updater_thread(void *);
+
 static unsigned char last_crc = 0;
 
-static void do_update(void){
+static void do_update(void *file){
 	
 	L_HEAD *local_obj; //object file on this machine
 	char *obj_data_buff = NULL;
 	to_packet_t *response = NULL, *request = NULL;
 	unsigned char this_crc = 0;
 	
-	local_obj = obj_file_parse(main_settings.object_path, main_settings.tag, false);
+	local_obj = obj_file_parse((char *)file, main_settings.tag, false);
 	if(!local_obj){
 		to_log_err("Failure parsing the local object");
 		return;
@@ -44,9 +46,10 @@ static void do_update(void){
 	/* Update len and pointer to the obj_file buffer */
 	request = to_tcp_prep_packet();
 	request->packet_type = PACKET_UPDATE;
+	strncpy(request->obj_path, file, strlen(file));
 	request->obj_data = obj_data_buff;
 	request->obj_data_len = obj_data_len;
-	request->socket = socket;	
+	request->socket = socket;
 	
 	to_tcp_send_packet(request);
 	
@@ -70,9 +73,34 @@ static void do_update(void){
 	return;
 }
 
-void mstr_send_update(void){
+static void *updater_thread(void *obj_path){
 
-	to_timed_init_job("Slave update", main_settings.scan_frequency);
 
-	to_timed_run_periodic_job(do_update);
+	fprintf(stderr, "File [%s]", (char *)obj_path);
+	char *jobname;
+	asprintf(&jobname, "Update job for file %s", (char *)obj_path);
+
+	to_timed_init_job(jobname, main_settings.scan_frequency);
+	
+	to_timed_run_periodic_job(do_update, obj_path);
+
+	free(jobname);
+	pthread_exit(NULL);
+}
+
+void master_monitor_files(void){
+
+	pthread_t updater_th[main_settings.object_count];
+	
+	for(int i = 0; i < main_settings.object_count; i++){
+		if(pthread_create(&updater_th[i], NULL,
+				  updater_thread, (void *)main_settings.object_path[i]) < 0){
+			to_log_err("Something went wrong while creating updater handler thread");
+			return;
+		}
+	}
+
+	for(int i = 0; i < main_settings.object_count; i++){
+		pthread_join(updater_th[i], NULL);
+	}
 }

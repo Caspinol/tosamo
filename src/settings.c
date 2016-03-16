@@ -8,8 +8,9 @@ typedef struct {
 	bool is_found;
 }allowed_keywords_t;
 
-static ret_code_e validate_key(char const *);
-static ret_code_e populate_main_settings(void);
+static void print_local_settings(void);
+static int validate_key(char const *);
+static int populate_main_settings(void);
 
 /* Array of allowed keywords in settings file */
 static allowed_keywords_t allowed_keywords[] = {
@@ -29,21 +30,20 @@ static allowed_keywords_t allowed_keywords[] = {
 /* What we have parsed from the config file */
 static L_HEAD * settings = NULL; 
 
-void to_print_local_settings(void){
+void print_local_settings(void){
 	LOG_LEVEL2("runnning mode -> [%s]",
 		   (main_settings.running_mode == MASTER) ? "MASTER" : "SLAVE");
 	LOG_LEVEL2("my_ip -> [%s]", main_settings.my_ip);
 	LOG_LEVEL2("remote_ip -> [%s]", main_settings.remote_ip);
 	LOG_LEVEL2("port -> [%s]", main_settings.port);
 	LOG_LEVEL2("tag -> [%s]", main_settings.tag);
-	LOG_LEVEL2("object_file -> [%s]", main_settings.object_path);
 	LOG_LEVEL2("daemon mode -> [%s]", main_settings.daemonize ? "TRUE" : "FALSE");
 	LOG_LEVEL2("pid file path -> [%s]", main_settings.pid_file);
 	LOG_LEVEL2("file scan freq -> [%d]", main_settings.scan_frequency);
 }
 
-ret_code_e to_parse_local_settings(char *file){
-	ret_code_e r_status = RET_NOK;
+int to_parse_local_settings(char *file){
+	int r_status = -1;
 	
 	char line[LINE];
 
@@ -99,14 +99,13 @@ ret_code_e to_parse_local_settings(char *file){
 		to_list_push(settings, kv_pair);
 	}
 
-	if(populate_main_settings() == RET_NOK){
+	if(populate_main_settings()){
 		fprintf(stderr, "Failed to populate config struct\n");
 		goto CLEANUP;
 	}
 
-	to_print_local_settings();
-	
-	r_status = RET_OK;
+	print_local_settings();
+	r_status = 0;
 
  CLEANUP:
 	to_list_destroy(settings);
@@ -114,54 +113,76 @@ ret_code_e to_parse_local_settings(char *file){
 	return r_status;
 }
 
-static ret_code_e validate_key(char const * key){
+static int validate_key(char const * key){
 	int i;
         for(i = 0; allowed_keywords[i].keyword != NULL; i++){
 		if(!strncmp(key, allowed_keywords[i].keyword, strlen(key))){
-			return RET_OK;
+			return 0;
 		}		
 	}
-	return RET_NOK;
+	return -1;
 }
 
-static ret_code_e populate_main_settings(void){
+static int populate_main_settings(void){
 
-	KV_PAIR *pair = to_list_find(settings, "mode");
-	if(!pair) return RET_NOK;
+	KV_PAIR *pair = NULL;
+	
+	pair = to_list_find(settings, "mode");
+	if(!pair) return -1;
 	main_settings.running_mode = (strncmp(pair->value, "master", strlen("master"))==0) ? MASTER : SLAVE;
 	
 	pair = to_list_find(settings, "my_ip");
-	if(!pair) return RET_NOK;
+	if(!pair) return -1;
 	strncpy(main_settings.my_ip, pair->value, pair->vlen);
 	
 	pair = to_list_find(settings, "remote_ip");
-	if(!pair) return RET_NOK;
+	if(!pair) return -1;
 	strncpy(main_settings.remote_ip, pair->value, pair->vlen);
 	
 	pair = to_list_find(settings, "port");
-	if(!pair) return RET_NOK;
+	if(!pair) return -1;
 	strncpy(main_settings.port, pair->value, pair->vlen);
 	
 	pair = to_list_find(settings, "tag");
-	if(!pair) return RET_NOK;
+	if(!pair) return -1;
 	strncpy(main_settings.tag, pair->value, pair->vlen);
-	
-	pair = to_list_find(settings, "object_file");
-	if(!pair) return RET_NOK;
-	strncpy(main_settings.object_path, pair->value, pair->vlen);
-	
+
 	pair = to_list_find(settings, "log_level");
-	if(!pair) return RET_NOK;
+	if(!pair) return -1;
 	main_settings.log_level = atoi(pair->value);
 
 	pair = to_list_find(settings, "scan_frequency");
-	if(!pair) return RET_NOK;
+	if(!pair) return -1;
 	main_settings.scan_frequency = atoi(pair->value);
 
 	pair = to_list_find(settings, "pid_file");
-	if(!pair) return RET_NOK;
+	if(!pair) return -1;
 	strncpy(main_settings.pid_file, pair->value, pair->vlen);
 
+	/* We need to count how  many files we track */
+	main_settings.object_count = to_list_get_count(settings, "object_file");
+
+	main_settings.object_path = malloc(main_settings.object_count * sizeof(char *));
+	if(!(main_settings.object_path)){
+		fprintf(stderr, "No memory for object_file array\n");
+		return -1;
+	}
+
+	int obj_count = 0;
+	do{
+
+		pair = to_list_get(settings, "object_file");
+		if(!pair) return -1;
+
+		main_settings.object_path[obj_count] = malloc(pair->vlen * sizeof(char) + 1);
+		strncpy(main_settings.object_path[obj_count], pair->value, pair->vlen);
+		main_settings.object_path[obj_count][pair->vlen] = '\0';
+		
+		to_kvpair_destroy(pair);
+		fprintf(stderr, "File [%s]",main_settings.object_path[obj_count]);
+		obj_count++;
+
+	}while(to_list_peek(settings, "object_file") && obj_count < main_settings.object_count);
 	
-	return RET_OK;
+	return 0;
 }

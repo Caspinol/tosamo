@@ -24,12 +24,15 @@ typedef enum {
 typedef struct local_settings_t{
 	
 	running_mode_e running_mode;                /* Are we master or slave */
-	int            scan_frequency;              /* How often we send updates */
 	char           my_ip[IP_LEN + 1];           /* IP we want to bind to */ 
 	char           remote_ip[IP_LEN + 1];       /* Where do we send/recv the updates */
-	char           port[IP_LEN + 1];            
+	char           port[IP_LEN + 1];
+
+	char           **object_path;               /* File we want to syncronise */
+	int            object_count;                /* How many files we need to keep track */
+	
 	char           tag[TAG_LEN + 1];            /* Pattern to mark the parts to sync */
-	char           object_path[OBJ_PATH_LEN];   /* File we want to syncronise */
+	int            scan_frequency;              /* How often we send updates */
 	int            log_level;                   
 	bool           daemonize;                   /* Should we run as daemon */
 	char           pid_file[OBJ_PATH_LEN];      /* Where do we store the pid file */
@@ -39,7 +42,6 @@ typedef struct local_settings_t{
 /* The struct containing local settings is going to be global */
 extern local_settings_t main_settings;
 
-void to_print_local_settings(void);
-ret_code_e to_parse_local_settings(char *);
+int to_parse_local_settings(char *);
 
 #endif

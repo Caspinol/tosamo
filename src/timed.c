@@ -31,16 +31,12 @@ void to_timed_stop_job(void){
 }
 
 /* It will run specified function periodically */
-void to_timed_run_periodic_job(fun_job do_job){
-
-	struct pollfd null_poll[1];
-	null_poll[0].fd = -1;
-	null_poll[0].events = 0;
+void to_timed_run_periodic_job(fun_job do_job, void *data){
 
 	LOG_LEVEL0("Starting [%s] job every %d(s)", job.job_name, job.freq/1000);
 
 	do{
-		do_job();
+		do_job(data);
 		LOG_LEVEL3("Job [%s] finished", job.job_name);
 	}while((poll(NULL, 0, job.freq) >= 0));
 	

@@ -99,6 +99,19 @@ bool to_list_peek(L_HEAD *head, void *key){
 	return false;
 }
 
+/* Returns number of elements with given key */
+int to_list_get_count(L_HEAD *head, void *key){
+	int count = 0;
+
+	for(L_NODE *n = head->node; n; n = n->next){
+		KV_PAIR *p = n->data;
+		if(strncmp(p->key, key, strlen(key)) == 0){
+			count++;
+		}
+	}
+	return count;
+}
+
 /* Returns node without removing it from list */
 void * to_list_find(L_HEAD *head, void *key){
 	for(L_NODE *n=head->node; n; n=n->next){

@@ -290,7 +290,7 @@ static int to_data_serialize(to_packet_t * packet){
 
 	case PACKET_UPDATE:
 
-		packet_len = strlen(main_settings.object_path) + packet->obj_data_len;
+		packet_len = strlen(packet->obj_path) + packet->obj_data_len;
 
 		/*
 		  1 for type, 1 for object path, 1 for data,
@@ -310,8 +310,8 @@ static int to_data_serialize(to_packet_t * packet){
 		
 		/* ...then file name */
 		LOG_LEVEL2("Copying obj file path");
-		memcpy(r_data + here, main_settings.object_path, strlen(main_settings.object_path));
-		here += strlen(main_settings.object_path);
+		memcpy(r_data + here, packet->obj_path, strlen(packet->obj_path));
+		here += strlen(packet->obj_path);
 		COMMA();
 		
 		/* 
@@ -346,7 +346,7 @@ static int to_data_serialize(to_packet_t * packet){
 
 		LOG_LEVEL2("Allocating memory for CRC check packet");
 		/* Path len + CRC len + 4 for separators */
-		r_data = packet->raw_data = malloc(5 + strlen(main_settings.object_path) * sizeof(char));
+		r_data = packet->raw_data = malloc(5 + strlen(packet->obj_path) * sizeof(char));
 		if(!r_data){
 			to_log_err("Failed to allocate memory for CRC packet");
 			return -1;
@@ -357,8 +357,8 @@ static int to_data_serialize(to_packet_t * packet){
 		COMMA();
 
 		LOG_LEVEL2("Copying obj file path");
-		memcpy(r_data + here, main_settings.object_path, strlen(main_settings.object_path));
-		here += strlen(main_settings.object_path);
+		memcpy(r_data + here, packet->obj_path, strlen(packet->obj_path));
+		here += strlen(packet->obj_path);
 		COMMA();
 		
 		LOG_LEVEL2("Calculating checksum");

@@ -7,14 +7,6 @@
 #include <ctype.h>
 #include <time.h>
 
-#define FALSE 0
-#define TRUE !FALSE
-
-typedef enum ret_code_e{
-	RET_OK = 0,
-	RET_NOK
-}ret_code_e;
-
 char *to_time_now(void);
 char *to_str_reverse(char const *, size_t);
 void to_str_del_substr(char *, const char *, size_t);
