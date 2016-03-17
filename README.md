@@ -18,7 +18,7 @@ HOW:
 
 and start the program with:
 
-	"/etc/init.d/rc.tosamod start" - on a Linux system
+	"/etc/init.d/tosamod start" - on a Linux system
 	"launchctl load -w /Library/LaunchDaemons/net.catdamnit.tosamod.plist" - on OSX
 
 The program works in master/slave model so you need to specify the master machine and slave.
