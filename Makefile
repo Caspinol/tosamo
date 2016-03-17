@@ -38,7 +38,7 @@ OBJS		= $(addprefix $(BUILD)/, $(SRC:.c=.o))
 # Build objects out of test files
 TOBJS		= $(addprefix $(TEST_DIR)/, $(TSRC:.c=.o))
 
-.PHONY: all dir clean show maketest install uninstall
+.PHONY: all dir clean maketest install uninstall upgrade
 
 all: $(BIN_DIR)/$(BIN_NAME) $(TEST_DIR)/$(TEST_BIN_NAME)
 
@@ -101,6 +101,11 @@ else
 	@rm -f /etc/init.d/tosamod
 endif
 
+upgrade:
+	@echo "Cleaning up old binaries"
+	rm -f $(INSTALL_PFX)/sbin/$(BIN_NAME)
+	@echo "Installing new binaries"
+	@install $(BIN_DIR)/$(BIN_NAME) $(INSTALL_PFX)/sbin
 clean:
 	@echo "Deleting *.o files"
 	@$(RM) $(OBJS) $(TOBJS) | true
