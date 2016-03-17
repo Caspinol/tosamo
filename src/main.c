@@ -153,6 +153,7 @@ int main(int argc, char **argv){
 		fclose(fp);
 	}else{
 		to_log_err("Failed to create PID file: [%s]", strerror(errno));
+		to_cleanup_settings();
 		exit(EXIT_FAILURE);
 	}	
 
@@ -172,8 +173,6 @@ int main(int argc, char **argv){
 	}else{
 		slave_handle_updates(&running);
 	}
-
-	return EXIT_SUCCESS;
 }
 
 static void handle_signal(int signal){
@@ -186,6 +185,7 @@ static void handle_signal(int signal){
 	case SIGINT:
 		to_log_info("Inerrupted by user with SIGINT.\nSee ya!");
 		running = 0;
+		to_cleanup_settings();
 		break;
 		
 	default:

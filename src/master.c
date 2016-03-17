@@ -34,7 +34,7 @@ static void do_update(void *file){
 		to_list_destroy(local_obj);
 		return;
 	}
-
+	LOG_LEVEL2("File has changed - sending update");
 	
 	int socket = to_tcp_remote_connect(main_settings.remote_ip, main_settings.port);	
 	if(socket < 0){

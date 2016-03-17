@@ -1,3 +1,12 @@
+v0.7.0
+	* Multiple files can now be tracked
+	* List library updated
+	* Cleanup settings object upon program exit
+v0.6.8
+	* Added startup scripts for OSX and linux
+	* Minor code cleanups
+	* Added tests
+	* Makefile improvements
 v0.6.2
 	* Check for file changes before sending update
 	* Fixes to linux startup script

@@ -43,5 +43,6 @@ typedef struct local_settings_t{
 extern local_settings_t main_settings;
 
 int to_parse_local_settings(char *);
+void to_cleanup_settings(void);
 
 #endif

@@ -185,3 +185,12 @@ static int populate_main_settings(void){
 	
 	return 0;
 }
+
+void to_cleanup_settings(void){
+
+	for(int i = 0; i < main_settings.object_count; i++){
+		free(main_settings.object_path[i]);
+	}
+
+	free(main_settings.object_path);
+}
