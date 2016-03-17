@@ -4,9 +4,9 @@
  * and send the files to the slave
  */
 
-static void *updater_thread(void *);
+static void *timed_task_thread(void *);
 
-static unsigned char last_crc = 0;
+static __thread unsigned char last_crc = 0;
 
 static void do_update(void *file){
 	
@@ -73,10 +73,8 @@ static void do_update(void *file){
 	return;
 }
 
-static void *updater_thread(void *obj_path){
+static void *timed_task_thread(void *obj_path){
 
-
-	fprintf(stderr, "File [%s]", (char *)obj_path);
 	char *jobname;
 	asprintf(&jobname, "Update job for file %s", (char *)obj_path);
 
@@ -94,7 +92,7 @@ void master_monitor_files(void){
 	
 	for(int i = 0; i < main_settings.object_count; i++){
 		if(pthread_create(&updater_th[i], NULL,
-				  updater_thread, (void *)main_settings.object_path[i]) < 0){
+				  timed_task_thread, (void *)main_settings.object_path[i]) < 0){
 			to_log_err("Something went wrong while creating updater handler thread");
 			return;
 		}

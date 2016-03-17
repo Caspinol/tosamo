@@ -27,7 +27,6 @@ DEFINE		=
 LFLAGS 		= -pthread
 
 CFLAGS 		= -Wall -g -ggdb -std=gnu99
-CFLAGS		+= -pthread
 CFLAGS		+= $(INC) $(DEFINE)
 
 TCFLAGS		= -Wall -g -ggdb -std=gnu9

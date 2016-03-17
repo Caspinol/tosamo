@@ -408,25 +408,26 @@ static int to_data_deserialize(to_packet_t * packet){
 	size_t obj_len = 0;
 	char *there;
 	char *here = there = packet->raw_data;
-	
+
 	/* 
 	   get type 
 	   its only 1 byte
 	*/
-	FIND_COMMA();
-	packet->packet_type = there[0];
+	packet->packet_type = *here;
 	LOG_LEVEL1("Received [%s] packet", to_tcp_packet_strtype(packet->packet_type));
+	FIND_COMMA();
 
 	switch(packet->packet_type){
 	case PACKET_UPDATE:
 
 		/* get fileneame */
+		there = here;
 		FIND_COMMA();
 		if((here - there) < 1) return -1;
 		
 		memcpy(packet->obj_path, there, here - there - 1);
 		packet->obj_path[here - there - 1] = '\0';
-		
+		LOG_LEVEL0("File recved [%s]", packet->obj_path);
 		/* update the pointer */
 		there = here;
 		

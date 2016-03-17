@@ -179,7 +179,6 @@ static int populate_main_settings(void){
 		main_settings.object_path[obj_count][pair->vlen] = '\0';
 		
 		to_kvpair_destroy(pair);
-		fprintf(stderr, "File [%s]",main_settings.object_path[obj_count]);
 		obj_count++;
 
 	}while(to_list_peek(settings, "object_file") && obj_count < main_settings.object_count);

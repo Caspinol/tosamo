@@ -52,6 +52,7 @@ static void *conn_handler(void *client_sock){
 	response->packet_type = PACKET_NACK;
 	
 	request = to_tcp_read_packet(sock, false);
+	LOG_LEVEL0("Receiving update for [%s]", request->obj_path);
 
 	chsum = crc(request->obj_data, request->obj_data_len);
 	if(chsum != request->crc){
@@ -60,7 +61,7 @@ static void *conn_handler(void *client_sock){
 		all_ok = false;
 		goto CLEANUP;
 	}
-	
+
 	LOG_LEVEL1("CRC check OK!");
 	
 	remote_obj = obj_buffer_parse(request->obj_data, request->obj_data_len, main_settings.tag);
