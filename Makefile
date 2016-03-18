@@ -103,7 +103,7 @@ endif
 
 upgrade:
 	@echo "Cleaning up old binaries"
-	rm -f $(INSTALL_PFX)/sbin/$(BIN_NAME)
+	@rm -f $(INSTALL_PFX)/sbin/$(BIN_NAME)
 	@echo "Installing new binaries"
 	@install $(BIN_DIR)/$(BIN_NAME) $(INSTALL_PFX)/sbin
 clean:
