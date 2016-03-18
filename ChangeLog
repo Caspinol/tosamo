@@ -1,4 +1,6 @@
-v0.7.0
+v0.7.1
+	* Added "upgrade" option to makefile
+	* Fixed the OSX launchd .plist
 	* Multiple files can now be tracked
 	* List library updated
 	* Cleanup settings object upon program exit
