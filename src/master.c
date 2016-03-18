@@ -1,3 +1,5 @@
+#define _GNU_SOURCE /* asprintf needs it */
+
 #include "include/master.h"
 
 /* Master is essentially a client so it will initialize connections 
