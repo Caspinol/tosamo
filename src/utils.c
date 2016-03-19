@@ -53,7 +53,11 @@ size_t to_get_filelen(FILE *f){
 
 void to_str_trim(char * s) {
 	char * str = s;
+
+	if(!str) return;
+	
 	int len = strlen(str);
+	if(len == 0) return;
 	
 	while(isspace(str[len - 1])){
 		str[--len] = 0;

@@ -1,6 +1,5 @@
 #include "include/lists.h"
 
-
 KV_PAIR *to_kvpair_create(char *key, size_t klen, char *value, size_t vlen){
 	KV_PAIR *b = malloc(sizeof(KV_PAIR));
 	if(!b){
@@ -33,6 +32,22 @@ void to_kvpair_destroy(KV_PAIR *pair){
 	}
 }
 
+/* Some defaut implementation of compare and delete functions */
+static void default_data_del(void *data){
+	return to_kvpair_destroy((KV_PAIR *)data);
+}
+
+static bool default_data_cmp(void *c1, void *c2){
+	char * p1 = (char *)c1;
+	char * p2 = (char *)c2;
+	int s = strlen(p2);
+
+	if(!strncmp(p1, p2, s)){
+		return true;
+	}
+	return false;
+}
+
 /*
   New list instantiation with specified name
   
@@ -41,17 +56,31 @@ void to_kvpair_destroy(KV_PAIR *pair){
   @return h - pointer to a head of a list
   or NULL if unsuccessfull
  */
-L_HEAD *to_list_create(){
-	L_HEAD *h = calloc(1, sizeof(L_HEAD));
-	if(!h) return NULL;
+L_HEAD *to_list_create(list_data_delete data_del, list_data_compare data_cmp){
+	L_HEAD *head = calloc(1, sizeof(L_HEAD));
+	if(!head) return NULL;
 	
-	h->node = calloc(1, sizeof(L_NODE));
-	if(!h->node){
-		free(h);
+	head->node = calloc(1, sizeof(L_NODE));
+	if(!head->node){
+		free(head);
 		return NULL;
 	}
-	h->count = 0;
-	return h;
+	head->count = 0;
+
+	/* Use defaults if nothing specified */
+	if(data_del){
+		head->data_del = data_del;
+	}else{
+		head->data_del = default_data_del;
+	}
+
+	if(data_cmp){
+		head->data_cmp = data_cmp;
+	}else{
+		head->data_cmp = default_data_cmp;
+	}
+	
+	return head;
 }
 
 /*
@@ -64,9 +93,9 @@ void to_list_replace(L_HEAD *head, void *pair){
 	
 	for(L_NODE *n = head->node; n; n=n->next){
 		p = n->data;
-		if(!strncmp(p->key, pp->key, strlen(p->key))){
+		if(head->data_cmp(p->key, pp->key)){
 			/* we have match */
-			to_kvpair_destroy(p);
+			head->data_del(p);
 			n->data = pp;
 			break;
 		}
@@ -92,7 +121,7 @@ void to_list_push(L_HEAD *head, void *data){
 bool to_list_peek(L_HEAD *head, void *key){
 	for(L_NODE *n = head->node; n; n = n->next){
 		KV_PAIR *p = n->data;
-		if(strncmp(p->key, key, strlen(key)) == 0){
+		if(head->data_cmp(p->key, key)){
 			return true;
 		}
 	}
@@ -105,7 +134,7 @@ int to_list_get_count(L_HEAD *head, void *key){
 
 	for(L_NODE *n = head->node; n; n = n->next){
 		KV_PAIR *p = n->data;
-		if(strncmp(p->key, key, strlen(key)) == 0){
+		if(head->data_cmp(p->key, key)){
 			count++;
 		}
 	}
@@ -116,7 +145,7 @@ int to_list_get_count(L_HEAD *head, void *key){
 void * to_list_find(L_HEAD *head, void *key){
 	for(L_NODE *n=head->node; n; n=n->next){
 		KV_PAIR *p = n->data;
-		if(strncmp(p->key, key, strlen(key)) == 0){
+		if(head->data_cmp(p->key, key)){
 			return p;
 		}
 	}
@@ -130,7 +159,7 @@ void * to_list_get(L_HEAD *head, void *key){
 	while(curr){
 		/* Keep the pointer to object we want to return */
 		KV_PAIR *p = curr->data;
-		if(strncmp(p->key, key, strlen(key)) == 0){
+		if(head->data_cmp(p->key, key)){
 		        if(prev){
 				prev->next = curr->next;
 			}else{
@@ -180,7 +209,7 @@ void to_list_destroy(L_HEAD *head){
 	L_NODE *nn;
 	while (n){
 		nn = n->next;
-		to_kvpair_destroy(n->data);
+		head->data_del(n->data);
 		free(n);
 		n = nn;
 	}

@@ -11,6 +11,10 @@ void TestSettingsParser(CuTest *tc){
 	CuAssertStrEquals(tc, "test.cfg", main_settings.object_path[0]);
 	CuAssertStrEquals(tc, "test2.cfg", main_settings.object_path[1]);
 	CuAssertStrEquals(tc, "test3.cfg", main_settings.object_path[2]);
+
+	to_cleanup_settings();
+
+	CuAssertIntEquals(tc, 0, main_settings.object_count);
 }
 
 void TestTrim(CuTest *tc){
@@ -21,6 +25,7 @@ void TestTrim(CuTest *tc){
 	to_str_trim(i1);
 	to_str_trim(i2);
 	to_str_trim(i3);
+	to_str_trim(NULL);
 	
 	CuAssertStrEquals(tc, "oki doki", i1);
 	CuAssertStrEquals(tc, "", i2);
@@ -91,7 +96,7 @@ void TestListStuff(CuTest *tc){
 
 	L_HEAD *head;
 
-	head = to_list_create();
+	head = to_list_create(NULL, NULL);
 	CuAssertPtrNotNull(tc, head);
 	CuAssertIntEquals(tc, 0, head->count);
 	
@@ -101,8 +106,12 @@ void TestListStuff(CuTest *tc){
 	to_list_push(head, &p1);
 	to_list_push(head, &p2);
 
+	to_list_push(head, &p2);
+
+	CuAssertIntEquals(tc, 2, to_list_get_count(head, "head"));
+	
 	/* Check if counter incremented */
-	CuAssertIntEquals(tc, 2, head->count);
+	CuAssertIntEquals(tc, 3, head->count);
 	
 	KV_PAIR *exp1 = to_list_find(head, "face");
 	KV_PAIR *exp2 = to_list_find(head, "head");
@@ -114,12 +123,21 @@ void TestListStuff(CuTest *tc){
 	exp2 = to_list_get(head, "head");
 
 	/* Check if counter decreased */
-	CuAssertIntEquals(tc, 0, head->count);
+	CuAssertIntEquals(tc, 1, head->count);
 
 	/* Try to get it again should be NULL */
 	exp1 = to_list_get(head, "face");
 	CuAssertPtrEquals(tc, exp1, NULL);
-}
+
+	/* Should be one more "head" object left */
+	exp1 = to_list_get(head, "head");
+	CuAssertPtrEquals(tc, exp1, &p2);
+
+	/* Check if counter decreased */
+	CuAssertIntEquals(tc, 0, head->count);
+	
+	free(head);
+ }
 
 void TestObjHandling(CuTest *tc){
 	L_HEAD *head_remote = NULL,

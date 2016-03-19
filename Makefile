@@ -64,7 +64,7 @@ $(BIN_DIR):
 
 $(TEST_DIR)/%.o: %.c
 	@echo "CC	-	$<"
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(TCFLAGS) -c -o $@ $<
 
 $(TEST_DIR)/$(TEST_BIN_NAME): $(TOBJS) $(filter-out $(BUILD)/main.o, $(OBJS))
 	@echo "LD	-	$(TEST_BIN_NAME)"

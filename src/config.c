@@ -46,7 +46,7 @@ static L_HEAD * obj_buffer_chop(char * obj_file_buf, int buflen, char * tag, boo
 	char key[10];
 	size_t ltag = strlen(tag); /* Length of the tag string */
 	KV_PAIR *kv_pair = NULL;
-	L_HEAD * file_parts = to_list_create();
+	L_HEAD * file_parts = to_list_create(NULL, NULL);
 
 	/* set the opening and closing tag patterns */
 	char *open_tag_ptrn = tag;

@@ -47,7 +47,7 @@ int to_parse_local_settings(char *file){
 	
 	char line[LINE];
 
-	settings = to_list_create();
+	settings = to_list_create(NULL, NULL);
 	
 	fprintf(stdout, "Parsing [%s] for settings\n", file);
 	
@@ -193,4 +193,6 @@ void to_cleanup_settings(void){
 	}
 
 	free(main_settings.object_path);
+
+	main_settings.object_count = 0;
 }

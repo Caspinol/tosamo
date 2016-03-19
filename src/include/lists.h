@@ -21,15 +21,20 @@ typedef struct cf_node{
 	struct cf_node * next;
 }L_NODE;
 
+typedef void (*list_data_delete)(void *data);
+typedef bool (*list_data_compare)(void *c1, void *c2);
+
 typedef struct l_head{
 	struct cf_node * node;
 	int count; /* Number of elements in the list */
+	list_data_delete data_del;
+	list_data_compare data_cmp;
 }L_HEAD;
 
 KV_PAIR *to_kvpair_create(char *, size_t, char *, size_t);
 void to_kvpair_destroy(KV_PAIR *);
 
-L_HEAD *to_list_create();
+L_HEAD *to_list_create(list_data_delete data_del, list_data_compare data_cmp);
 void to_list_replace(L_HEAD *, void *);
 void to_list_push(L_HEAD *, void *);
 bool to_list_peek(L_HEAD *, void *);
