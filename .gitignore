@@ -5,3 +5,4 @@ obj/*
 bin/tosamod
 tests/tosamo_test
 .swp
+*.dSYM

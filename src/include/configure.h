@@ -1,7 +1,7 @@
 #ifndef __CONFIGURE_H__
 #define __CONFIGURE_H__
 
-#define VERSION "v0.7.1"
+#define VERSION "v0.7.2"
 #define PROGNAME "tosamo"
 #define PROG_VER (PROGNAME " - " VERSION)
 

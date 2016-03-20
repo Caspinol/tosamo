@@ -1,3 +1,7 @@
+v0.7.2
+	* More tests
+	* Few performance andjustments
+	* Code fixes
 v0.7.1
 	* Added "upgrade" option to makefile
 	* Fixed the OSX launchd .plist

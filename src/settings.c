@@ -66,9 +66,9 @@ int to_parse_local_settings(char *file){
 		for(i = 0; i < LINE; i++){
 			if(line[i] == '='){
 				//found the key...
-				strncpy(key, line, i);
-				eq = i;
+				memcpy(key, line, i);
 				key[i] = '\0';
+				eq = i;
 				to_str_trim(key);
 				if(validate_key(key)){
 					
@@ -81,7 +81,7 @@ int to_parse_local_settings(char *file){
 					if(line[j+1] == '\0' || line[j+1] == '\n' || line[j+1] == ';'){
 						
 						//end of line - len of key gives value
-						strncpy(value, (line + eq + 1), (j - strlen(key)));
+						memcpy(value, (line + eq + 1), (j - strlen(key)));
 						value[j] = '\0';
 						to_str_trim(value);
 						break;
