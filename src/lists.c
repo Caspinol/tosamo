@@ -7,13 +7,13 @@ KV_PAIR *to_kvpair_create(char *key, size_t klen, char *value, size_t vlen){
 		return NULL;
 	}
 	
-	b->value = calloc(vlen+1, sizeof(char));
+	b->value = malloc(1 + vlen * sizeof(char));
 	if(!b->value){
 		to_log_err("Cannot malloc() the KV_PAIR->value - exiting");
 		return NULL;
 	}
 	
-	b->key = calloc(klen+1, sizeof(char));
+	b->key = malloc(1 + klen * sizeof(char));
 	if(!b->key){
 		to_log_err("Cannot create key");
 		return NULL;
@@ -57,10 +57,12 @@ static bool default_data_cmp(void *c1, void *c2){
   or NULL if unsuccessfull
  */
 L_HEAD *to_list_create(list_data_delete data_del, list_data_compare data_cmp){
-	L_HEAD *head = calloc(1, sizeof(L_HEAD));
+	L_HEAD *head;
+
+	head = malloc(1 * sizeof(L_HEAD));
 	if(!head) return NULL;
 	
-	head->node = calloc(1, sizeof(L_NODE));
+	head->node = malloc(1 * sizeof(L_NODE));
 	if(!head->node){
 		free(head);
 		return NULL;
