@@ -59,7 +59,7 @@ static L_HEAD * obj_buffer_chop(char * obj_file_buf, int buflen, char * tag, boo
 			if(whole){
 				/* copy the file before the tag, excluding tag */
 				kv_pair = to_kvpair_create("head", strlen("head"),
-							   cop, ((otag-cop)));
+							   cop, (otag - cop));
 				if(kv_pair){
 					to_list_push(file_parts, kv_pair);
 				}
@@ -73,7 +73,7 @@ static L_HEAD * obj_buffer_chop(char * obj_file_buf, int buflen, char * tag, boo
 				 * including the tags
 				 */
 				cop += ltag;
-				kv_pair = to_kvpair_create(key, strlen(key), otag, cop - otag);
+				kv_pair = to_kvpair_create(key, strlen(key), otag, (cop - otag));
 
 				to_list_push(file_parts, kv_pair);
 			}else{
@@ -93,7 +93,6 @@ static L_HEAD * obj_buffer_chop(char * obj_file_buf, int buflen, char * tag, boo
 	}
 
 	if(whole){
-		/* skip the opening tag */
 		kv_pair = to_kvpair_create("ass", strlen("ass"), cop, strlen(cop));
 		if(kv_pair){
 			to_list_push(file_parts, kv_pair);

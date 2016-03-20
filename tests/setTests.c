@@ -149,12 +149,39 @@ void TestObjHandling(CuTest *tc){
 	CuAssertPtrNotNull(tc, head_remote);
 	CuAssertPtrNotNull(tc, head_local);
 
+	KV_PAIR *kv = to_list_get(head_local, "head");
+	CuAssertStrEquals(tc, "local header\n\n\n", kv->value);
+	to_kvpair_destroy(kv);
+
+	kv = to_list_find(head_local, "1");
+	CuAssertStrEquals(tc, "#%%\n\nlocal 1\n\n%%#", kv->value);
+	kv = to_list_find(head_local, "2");
+	CuAssertStrEquals(tc, "#%%\nlocal 2\n%%#", kv->value);
+	kv = to_list_find(head_local, "3");
+	CuAssertStrEquals(tc, "#%%\n\nlocal 3\n\n%%#", kv->value);
+
+	kv = to_list_get(head_local, "head");
+	CuAssertStrEquals(tc, "\n\nlocal body\n\n", kv->value);
+	to_kvpair_destroy(kv);
+	kv = to_list_find(head_local, "head");
+	CuAssertStrEquals(tc, "\n\nlocal no change\n\n", kv->value);
+	kv = to_list_find(head_local, "ass");
+	CuAssertStrEquals(tc, "\n\nlocal asser\n", kv->value);
+
+	/* Remote only parses the tagged bits */
+	kv = to_list_find(head_remote, "1");
+	CuAssertStrEquals(tc, "#%%\n\nremote 1\n\n%%#", kv->value);
+	kv = to_list_find(head_remote, "2");
+	CuAssertStrEquals(tc, "#%%\nremote 2\n%%#", kv->value);
+	kv = to_list_find(head_remote, "3");
+	CuAssertStrEquals(tc, "#%%\n\nremote 3\n\n%%#", kv->value);
+	
 	CuAssert(tc, "Local should have more parts", head_remote->count < head_local->count);
 
 	obj_file_replace_tagged_parts(head_local, head_remote);
 
 	/* head_local should contain the remote stuff now */
-	KV_PAIR *kv = to_list_find(head_local, "2");
+	kv = to_list_find(head_local, "2");
 	CuAssertStrEquals(tc, "#%%\nremote 2\n%%#", kv->value);
 	
 	to_list_destroy(head_local);

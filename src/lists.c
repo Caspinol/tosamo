@@ -17,9 +17,13 @@ KV_PAIR *to_kvpair_create(char *key, size_t klen, char *value, size_t vlen){
 	if(!b->key){
 		to_log_err("Cannot create key");
 		return NULL;
-	}  
-	strncpy(b->key, key, klen);
-	strncpy(b->value, value, vlen);
+	}
+	
+	memcpy(b->key, key, klen);
+	b->key[klen] = '\0';
+	memcpy(b->value, value, vlen);
+	b->value[vlen] = '\0';
+	
 	b->vlen = vlen;
 	return b;
 }
@@ -62,7 +66,7 @@ L_HEAD *to_list_create(list_data_delete data_del, list_data_compare data_cmp){
 	head = malloc(1 * sizeof(L_HEAD));
 	if(!head) return NULL;
 	
-	head->node = malloc(1 * sizeof(L_NODE));
+	head->node = calloc(1, sizeof(L_NODE));
 	if(!head->node){
 		free(head);
 		return NULL;
