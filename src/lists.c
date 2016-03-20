@@ -44,9 +44,8 @@ static void default_data_del(void *data){
 static bool default_data_cmp(void *c1, void *c2){
 	char * p1 = (char *)c1;
 	char * p2 = (char *)c2;
-	int s = strlen(p2);
 
-	if(!strncmp(p1, p2, s)){
+	if(!strcmp(p1, p2)){
 		return true;
 	}
 	return false;
