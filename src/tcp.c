@@ -1,7 +1,7 @@
 #include "include/tcp.h"
 
 #define BACKLOG 10
-#define MAX_BUF_LEN 4096
+#define MAX_BUF_LEN 32768
 
 static int tcp_raw_recv(int socket, char *buffer);
 static int to_data_serialize(to_packet_t * packet);
