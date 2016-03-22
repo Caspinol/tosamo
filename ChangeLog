@@ -1,4 +1,5 @@
 v0.7.2
+	* Improved transfer of big chunks of data 
 	* More tests
 	* Few performance andjustments
 	* Code fixes

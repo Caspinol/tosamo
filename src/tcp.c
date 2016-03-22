@@ -1,11 +1,11 @@
 #include "include/tcp.h"
 
 #define BACKLOG 10
-#define MAX_BUF_LEN 32768
+#define MAX_BUF_LEN 8192
 
-static int tcp_raw_recv(int socket, char *buffer);
-static int to_data_serialize(to_packet_t * packet);
-static int to_data_deserialize(to_packet_t * packet);
+static int _tcp_raw_recv(int socket, char **buffer);
+static int _data_serialize(to_packet_t * packet);
+static int _data_deserialize(to_packet_t * packet);
 
 char * to_tcp_packet_strtype(to_packet_type type){
 	switch(type){
@@ -170,7 +170,7 @@ int to_tcp_send_packet(to_packet_t * packet){
 	int bytes_left = 0;
 
 	LOG_LEVEL1("Serializing data");
-	if(to_data_serialize(packet) < 0){
+	if(_data_serialize(packet) < 0){
 		to_log_err("Error serializing data");
 		return -1;
 	}
@@ -196,7 +196,7 @@ int to_tcp_send_packet(to_packet_t * packet){
 to_packet_t * to_tcp_read_packet(int socket, bool wait){
 
 	int len;
-	char raw_data[MAX_BUF_LEN];
+	char *raw_data;
 	struct timeval timeout;
 	to_packet_t * packet;
 	
@@ -212,7 +212,7 @@ to_packet_t * to_tcp_read_packet(int socket, bool wait){
 		setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 	}
 	
-	len = tcp_raw_recv(socket, raw_data);
+	len = _tcp_raw_recv(socket, &raw_data);
 	if(!(len > 0)) return NULL;
 
 	LOG_LEVEL2("Read [%d] bytes", len);
@@ -226,8 +226,9 @@ to_packet_t * to_tcp_read_packet(int socket, bool wait){
 	memcpy(packet->raw_data, raw_data, len);
 	packet->raw_data_len = len;
 
-	if(to_data_deserialize(packet)){
+	if(_data_deserialize(packet)){
 		to_log_err("Failure deserializing response");
+		free(raw_data);
 		to_tcp_packet_destroy(&packet);
 		return NULL;
 	}
@@ -235,25 +236,34 @@ to_packet_t * to_tcp_read_packet(int socket, bool wait){
 	return packet;
 }
 
-static int tcp_raw_recv(int socket, char *buffer){
+static int _tcp_raw_recv(int socket, char **buffer){
 	int num;
-	char byte;
-	for(int i = 1; i < MAX_BUF_LEN; i++){
-		num = recv(socket, &byte, 1, 0);
-		if(1 == num){
-			if((byte == '\x1f') && (*(buffer - 1) == '\x1f')){
-				/* read the last byte and terminater it */
-				*(buffer++) = byte;
-				*buffer = '\0';
-				return i;
-			}
-			/* copy and continue */
-			*(buffer++) = byte;
-		}else if(0 == num){
-			/* reciever disconnected? */
-			return i;
+	size_t total_numbytes = 0;
+	size_t buf_alloc_size = MAX_BUF_LEN;
+	char raw_rcv[MAX_BUF_LEN];
+
+	*buffer = malloc(MAX_BUF_LEN);
+
+	if(!*buffer){
+		return -1;
+	}
+	while((num = recv(socket, raw_rcv, MAX_BUF_LEN, 0)) > 0){
+		if(strstr(raw_rcv, "\x1f\x1f")){
+			memcpy(*buffer + total_numbytes, raw_rcv, num);
+			total_numbytes += num;
+			return total_numbytes;
 		}else{
-			to_log_err("Problem in recv(): ERRNO(%s)", strerror(errno));
+			/* Double the buffer size */
+			buf_alloc_size += 2;
+			char *r_tmp = realloc(*buffer, buf_alloc_size);
+			if(!r_tmp){
+				free(*buffer);
+				return -1;
+			}
+			*buffer = r_tmp;
+
+			memcpy(*buffer + total_numbytes, raw_rcv, num);
+			total_numbytes += num;
 		}
 	}
 	
@@ -279,7 +289,7 @@ static int tcp_raw_recv(int socket, char *buffer){
 		*(r_data + here++) =  '\x1f';	\
 	}while(0);				\
 
-static int to_data_serialize(to_packet_t * packet){
+static int _data_serialize(to_packet_t * packet){
 	
 	int here = 0;           /* currrrent location pointer */
 	size_t packet_len = 0;  /* overal packet length */
@@ -403,7 +413,7 @@ static int to_data_serialize(to_packet_t * packet){
 /* Stop it from while-ing indefinitely in case of missing '\x1f' */
 #define FIND_COMMA() while(*(here++) != '\x1f' && (here - packet->raw_data) < packet->raw_data_len);
 
-static int to_data_deserialize(to_packet_t * packet){
+static int _data_deserialize(to_packet_t * packet){
 
 	size_t obj_len = 0;
 	char *there;
