@@ -188,6 +188,57 @@ void TestObjHandling(CuTest *tc){
 	to_list_destroy(head_remote);
 }
 
+void TestSerialization(CuTest *tc){
+	char *obj_string = strdup("Crom, I have never prayed to you before. "
+				  "I have no tongue for it. "
+				  "No one, not even you, will remember if we were good men or bad. "
+				  "Why we fought, or why we died. "
+				  "All that matters is that two stood against many. "
+				  "That's what's important! "
+				  "Valor pleases you, Crom... so grant me one request. "
+				  "Grant me revenge! And if you do not listen, then to HELL with you!");
+
+	size_t filename_len = strlen("Conan the Barbarian");
+	to_packet_t *packet;
+	packet = to_tcp_prep_packet();
+
+	CuAssertPtrNotNull(tc, packet);
+
+	packet->packet_type = PACKET_UPDATE;
+	strncpy(packet->obj_path, "Conan the Barbarian", filename_len);
+
+	packet->obj_data = strdup(obj_string);
+	packet->obj_data_len = strlen(obj_string);
+
+	int ret = to_data_serialize(packet);
+	CuAssert(tc, "Serialize return should be > 0", ret > 0);
+
+	CuAssertIntEquals(tc, ret, packet->raw_data_len);
+
+	CuAssertPtrNotNull(tc, packet->raw_data);
+
+	CuAssertIntEquals(tc, PACKET_UPDATE, *packet->raw_data);
+	CuAssertIntEquals(tc, '\x1f', *(packet->raw_data + 1));
+	CuAssertIntEquals(tc, '\x1f', *(packet->raw_data + filename_len + 2));
+
+	/* Clean up the packet */
+	free(packet->obj_data);
+	packet->obj_data = NULL;
+	packet->obj_data_len = 0;
+
+	
+	ret = to_data_deserialize(packet);
+	CuAssert(tc, "De-Serialize return should be > 0", ret > 0);
+	CuAssertStrEquals(tc, "Conan the Barbarian", packet->obj_path);
+	CuAssertStrEquals(tc, obj_string, packet->obj_data);
+	CuAssertIntEquals(tc, strlen(obj_string), packet->obj_data_len);
+
+	free(obj_string);
+	to_tcp_packet_destroy(&packet);
+
+	CuAssert(tc, "Pointer should be NULL", packet == NULL);
+}
+
 CuSuite* TestWholeLot(void){
 	
 	CuSuite* suite = CuSuiteNew();
@@ -202,6 +253,8 @@ CuSuite* TestWholeLot(void){
 
 	SUITE_ADD_TEST(suite, TestSettingsParser);
 	SUITE_ADD_TEST(suite, TestObjHandling);
+
+	SUITE_ADD_TEST(suite, TestSerialization);
 
 	return suite;
 }

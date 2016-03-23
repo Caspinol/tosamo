@@ -1,31 +1,45 @@
+
+# System stuff
+UNAME		= $(shell uname)
+SYSTEM		= $(UNAME)
+
 RM		= /bin/rm
 
 CC		= gcc
 SIZE		= size
 
+# Binary names
 BIN_NAME	= tosamod
 TEST_BIN_NAME	= tosamo_test
 
+# Buld directories
 BUILD		= obj
 BIN_DIR		= bin
 TEST_DIR	= tests
 SRC_DIR 	= src
 
 INSTALL_PFX	= /usr/local
-UNAME		= $(shell uname)
 
+# The easiest is just to specify each file 
 SRC		= main.c config.c tcp.c settings.c
 SRC		+= master.c slave.c timed.c
 SRC		+= utils.c log.c crc.c lists.c
+SRC		+= serialize.c
 
 TSRC		= CuTest.c runTests.c setTests.c
 
 INC		= -I$(SRC_DIR)/include
 
+# Global defines
 DEFINE		=
 
-LFLAGS 		= -pthread
+# Linker flags
+LFLAGS		=
+ifeq ($(SYSTEM), Linux)
+LFLAGS 		+= -pthread
+endif
 
+# Compilation flags
 CFLAGS 		= -Wall -g -ggdb -std=gnu99
 CFLAGS		+= $(INC) $(DEFINE)
 
@@ -34,6 +48,7 @@ TCFLAGS		+= $(INC) $(DEFINE)
 
 VPATH		= src
 
+# Test and core objects
 OBJS		= $(addprefix $(BUILD)/, $(SRC:.c=.o))
 # Build objects out of test files
 TOBJS		= $(addprefix $(TEST_DIR)/, $(TSRC:.c=.o))
@@ -84,7 +99,7 @@ endif
 	@echo "Installing binaries"
 	@install $(BIN_DIR)/$(BIN_NAME) $(INSTALL_PFX)/sbin
 	@echo "Installing init script"
-ifeq ($(UNAME), Darwin)
+ifeq ($(SYSTEM), Darwin)
 	@echo "On OSX"
 	@install scripts/osx/net.catdamnit.tosamod.plist /Library/LaunchDaemons/
 else

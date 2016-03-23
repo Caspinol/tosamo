@@ -24,7 +24,6 @@ typedef enum to_packet_type {
 	PACKET_CRC
 }to_packet_type;
 
-
 typedef struct to_packet_t {
 	int socket;
 	to_packet_type packet_type; /* Type can be as the enum above */
@@ -35,6 +34,10 @@ typedef struct to_packet_t {
 	size_t obj_data_len; /* len of the above */
 	uint8_t crc; /* ...of unserialized data */
 }to_packet_t;
+
+/* serialize.h uses to_packet_t struct as argument */
+#include "serialize.h"
+
 
 char * to_tcp_packet_type(to_packet_type);
 to_packet_t * to_tcp_prep_packet(void);
