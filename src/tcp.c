@@ -255,6 +255,7 @@ static int _tcp_raw_recv(int socket, char **buffer){
 		}else{
 			/* Double the buffer size */
 			buf_alloc_size *= 2;
+			
 			char *r_tmp = realloc(*buffer, buf_alloc_size);
 			if(!r_tmp){
 				free(*buffer);
