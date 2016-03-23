@@ -1,6 +1,18 @@
-Installation steps:
+Installation:
 
-	     git clone https://github.com/Caspinol/tosamo.git
-	     cd ./tosamo
-	     make
-	     sudo make install
+	git clone https://github.com/Caspinol/tosamo.git
+	cd ./tosamo
+	make
+	sudo make install
+
+Uninstalation:
+
+	In the tosamo git directory
+	make uninstall
+
+Upgrade:
+
+	In the tosamo git directory
+	make upgrade
+
+	Upgrade will update only the binaries. Your tosamo.cfg will be left untouched

@@ -14,7 +14,9 @@ HOW:
 
 	#%% as opening tag
 	    and
-	%%# as closing tag (You can specify different tags in the config file.)
+	%%# as closing tag
+
+	(You can specify different tags in the config file.)
 
 and start the program with:
 
