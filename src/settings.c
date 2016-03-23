@@ -59,9 +59,11 @@ int to_parse_local_settings(char *file){
 	
 	while(fgets(line, LINE, settings_file) != NULL){
 		char key[KV_MAX_LEN] = {0}, value[KV_MAX_LEN] = {0};
-		if(line[0] == '#' ||line[0] == ';'|| line[0] == '\n'){
-			continue;
-		}
+		char *p = line;
+
+		while(isspace((int)*p)) p++;
+		if(*p == '#' || *p == ';' || *p == '\n') continue;
+		
 		int i, j, eq;
 		for(i = 0; i < LINE; i++){
 			if(line[i] == '='){

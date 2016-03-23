@@ -76,6 +76,10 @@ test:
 
 install:
 	@echo "Installing config file"
+# some systems (i.e. openSUSE) are missing /usr/local/etc so make it
+ifneq (,$(wildcard $(INSTALL_PFX)/etc/))
+	@mkdir -p $(INSTALL_PFX)/etc/
+endif
 	@install etc/tosamo.cfg $(INSTALL_PFX)/etc/
 	@echo "Installing binaries"
 	@install $(BIN_DIR)/$(BIN_NAME) $(INSTALL_PFX)/sbin
