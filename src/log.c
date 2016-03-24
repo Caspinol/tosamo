@@ -23,29 +23,6 @@ static void to_log(int priority, const char *fmt, va_list args){
 	vsyslog(priority, fmt, args);
 }
 
-static void to_rawhex(char *buf, int buflen, char **out){
-	char hexes[]= "0123456789ABCDEF";
-	int  i;
-	
-	if (!buflen) return;
-
-	*out = malloc(buflen * 2 + 1);
-	(*out)[buflen * 2] = '\0';
-	
-	
-	for (i = 0; i < buflen; i++){
-		(*out)[i * 2 + 0] = hexes[(buf[i] >> 4) & 0x0F];
-		(*out)[i * 2 + 1] = hexes[(buf[i]) & 0x0F];
-	}  
-}
-
-void to_log_raw(char *buf, int len){
-	char * raw_hex;
-	to_rawhex(buf, len, &raw_hex);
-	syslog(LOG_INFO, "RAW:\n[%s]", raw_hex);
-	free(raw_hex);
-}
-
 void to_log_err(const char *fmt, ...){
 	va_list args;
 	va_start(args, fmt);

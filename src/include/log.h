@@ -20,39 +20,30 @@
 
 #define LOG_LEVEL1(MSG, ...)					\
 	do{							\
-		if(verbose > 1){				\
+		if(verbose){					\
 			to_log_info(MSG, ##__VA_ARGS__);	\
 		}						\
 	}while(0);						\
 
 #define LOG_LEVEL2(MSG, ...)					\
 	do{							\
-		if(verbose > 2){				\
+		if(verbose > 1){				\
 			to_log_info(MSG, ##__VA_ARGS__);	\
 		}						\
 	}while(0);						\
 
 #define LOG_LEVEL3(MSG, ...)					\
 	do{							\
-		if(verbose > 3){				\
+		if(verbose > 2){				\
 			to_log_info(MSG, ##__VA_ARGS__);	\
 		}						\
 	}while(0);						\
-	
-#define LOG_LEVEL3_RAW(BUF, LEN, MSG, ...)			\
-	do{							\
-		if(verbose > 3){				\
-			to_log_info(MSG, ##__VA_ARGS__);	\
-			to_log_raw(BUF, LEN);			\
-		}						\
-	}while(0);						\
-	
+        
 	
 /* detailed logging */
 extern int verbose; 
 
 void to_log_start(char *progname, bool daemonize);
-void to_log_raw(char * buf, int len);
 void to_log_err(const char *format, ...);
 void to_log_info(const char *format, ...);
 void to_log_warn(const char *format, ...);

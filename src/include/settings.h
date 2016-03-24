@@ -6,15 +6,30 @@
 #include <errno.h>
 #include <string.h>
 #include <stdbool.h>
+#include <netinet/in.h> /* For the ADDR string */
+
+#ifdef __linux__
+# include <linux/limits.h> /* For the MAX_PATH */
+#elif __APPLE__
+# include <sys/syslimits.h>
+#else
+# define PATH_MAX (4096)
+#endif
 
 #include "utils.h"
 #include "lists.h"
 #include "log.h"
 
+#define INET_PORTSTRLEN  (5 + 1)
+#define TAG_LEN          (15 + 1)
 
-#define IP_LEN 15
-#define TAG_LEN 15
-#define OBJ_PATH_LEN 256
+/* 
+   MAX_PATH is 4K but the usage case of this for config files.
+   Config files are in /etc, /usr/local/etc etc...
+   So 4K is an overkill and I go here with 1K which is still more then 
+   enough for most cases
+*/
+#define OBJ_PATH_LEN     (PATH_MAX / 4)
 
 typedef enum {
 	MASTER,
@@ -23,19 +38,22 @@ typedef enum {
 
 typedef struct local_settings_t{
 	
-	running_mode_e running_mode;                /* Are we master or slave */
-	char           my_ip[IP_LEN + 1];           /* IP we want to bind to */ 
-	char           remote_ip[IP_LEN + 1];       /* Where do we send/recv the updates */
-	char           port[IP_LEN + 1];
+	running_mode_e running_mode;                   /* Are we master or slave */
 
-	char           **object_path;               /* File we want to syncronise */
-	int            object_count;                /* How many files we need to keep track */
+	char           my_ip[INET6_ADDRSTRLEN];        /* IP we want to bind to */ 
+	char           port[INET_PORTSTRLEN];
+	char           (*remote_ip)[INET6_ADDRSTRLEN]; /* Where do we send/recv the updates */
+	int            remote_ip_count;
 	
-	char           tag[TAG_LEN + 1];            /* Pattern to mark the parts to sync */
-	int            scan_frequency;              /* How often we send updates */
+	char           (*object_path)[OBJ_PATH_LEN];   /* File we want to syncronise */
+	int            object_count;                   /* How many files we need to keep track */
+	
+	char           tag[TAG_LEN];                   /* Pattern to mark the parts to sync */
+	int            scan_frequency;                 /* How often we send updates */
 	int            log_level;                   
-	bool           daemonize;                   /* Should we run as daemon */
-	char           pid_file[OBJ_PATH_LEN];      /* Where do we store the pid file */
+
+	bool           daemonize;                      /* Should we run as daemon */
+	char           pid_file[OBJ_PATH_LEN];         /* Where do we store the pid file */
 	
 }local_settings_t;
 

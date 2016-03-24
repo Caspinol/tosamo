@@ -36,36 +36,39 @@ static void do_update(void *file){
 		to_list_destroy(local_obj);
 		return;
 	}
-	LOG_LEVEL2("File has changed - sending update");
-	
-	int socket = to_tcp_remote_connect(main_settings.remote_ip, main_settings.port);	
-	if(socket < 0){
-		free(obj_data_buff);
-		to_list_destroy(local_obj);
-		return;
-	}
-	
-	/* Update len and pointer to the obj_file buffer */
-	request = to_tcp_prep_packet();
-	request->packet_type = PACKET_UPDATE;
-	strncpy(request->obj_path, file, strlen(file));
-	request->obj_data = obj_data_buff;
-	request->obj_data_len = obj_data_len;
-	request->socket = socket;
-	
-	to_tcp_send_packet(request);
-	
-	LOG_LEVEL0("Awaiting slave confirmation...");
+	LOG_LEVEL2("File has changed - sending update to [%d] slaves", main_settings.remote_ip_count);
 
-	/* Now wait if all was fine on the other side */
-	response = to_tcp_read_packet(request->socket, true);
-
-	if(response->packet_type == PACKET_ACK){
-		LOG_LEVEL0("Remote object file succesfully updated");
-		/* Update CRC only after sussesfull update */
-		last_crc = this_crc;
-	}else{
-		to_log_err("Failed to update remote object");
+	for(int i = 0; i < main_settings.remote_ip_count; i++){
+	
+		int socket = to_tcp_remote_connect(main_settings.remote_ip[i], main_settings.port);	
+		if(socket < 0){
+			free(obj_data_buff);
+			to_list_destroy(local_obj);
+			return;
+		}
+		
+		/* Update len and pointer to the obj_file buffer */
+		request = to_tcp_prep_packet();
+		request->packet_type = PACKET_UPDATE;
+		strncpy(request->obj_path, file, strlen(file));
+		request->obj_data = obj_data_buff;
+		request->obj_data_len = obj_data_len;
+		request->socket = socket;
+		
+		to_tcp_send_packet(request);
+		
+		LOG_LEVEL0("Awaiting confirmation from [%s]", main_settings.remote_ip[i]);
+		
+		/* Now wait if all was fine on the other side */
+		response = to_tcp_read_packet(request->socket, true);
+		
+		if(response->packet_type == PACKET_ACK){
+			LOG_LEVEL0("Remote object file succesfully updated");
+			/* Update CRC only after sussesfull update */
+			last_crc = this_crc;
+		}else{
+			to_log_err("Failed to update remote object");
+		}
 	}
 
 	to_list_destroy(local_obj);

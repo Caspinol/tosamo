@@ -4,17 +4,17 @@ void TestSettingsParser(CuTest *tc){
 	to_parse_local_settings("tests/test.settings");
 	
 	CuAssertStrEquals(tc, "localhost", main_settings.my_ip);
-	CuAssertStrEquals(tc, "localhost", main_settings.remote_ip);
 	CuAssertStrEquals(tc, "9666", main_settings.port);
 	CuAssertStrEquals(tc, "#%%", main_settings.tag);
 	CuAssertIntEquals(tc, 3, main_settings.object_count);
-	CuAssertStrEquals(tc, "test.cfg", main_settings.object_path[0]);
-	CuAssertStrEquals(tc, "test2.cfg", main_settings.object_path[1]);
-	CuAssertStrEquals(tc, "test3.cfg", main_settings.object_path[2]);
+	for(int i = 0; i < main_settings.object_count; i++){
+		CuAssertIntEquals(tc, 0, strncmp(main_settings.object_path[i], "test", strlen("test"))); 
+	}
 
-	to_cleanup_settings();
-
-	CuAssertIntEquals(tc, 0, main_settings.object_count);
+	CuAssertIntEquals(tc, 5, main_settings.remote_ip_count);
+	for(int i = 0; i < main_settings.remote_ip_count; i++){
+		CuAssertIntEquals(tc, 0, strncmp(main_settings.remote_ip[i], "192.", strlen("192."))); 
+	}	
 }
 
 void TestTrim(CuTest *tc){
@@ -109,6 +109,10 @@ void TestListStuff(CuTest *tc){
 	to_list_push(head, &p2);
 
 	CuAssertIntEquals(tc, 2, to_list_get_count(head, "head"));
+
+	/* Check peeking */
+	CuAssert(tc, "Should peek true", to_list_peek(head, "head"));
+	CuAssert(tc, "Should peek false", !to_list_peek(head, "ffsdfsdf"));
 	
 	/* Check if counter incremented */
 	CuAssertIntEquals(tc, 3, head->count);
@@ -125,6 +129,10 @@ void TestListStuff(CuTest *tc){
 	/* Check if counter decreased */
 	CuAssertIntEquals(tc, 1, head->count);
 
+	/* Check peeking */
+	CuAssert(tc, "Should peek true", to_list_peek(head, "head"));
+	CuAssert(tc, "Should peek false", !to_list_peek(head, "ffsdfsdf"));
+	
 	/* Try to get it again should be NULL */
 	exp1 = to_list_get(head, "face");
 	CuAssertPtrEquals(tc, exp1, NULL);
@@ -133,6 +141,10 @@ void TestListStuff(CuTest *tc){
 	exp1 = to_list_get(head, "head");
 	CuAssertPtrEquals(tc, exp1, &p2);
 
+	/* Should be one more "head" object left */
+	exp1 = to_list_get(head, "head");
+	CuAssertPtrEquals(tc, exp1, NULL);
+	
 	/* Check if counter decreased */
 	CuAssertIntEquals(tc, 0, head->count);
 	

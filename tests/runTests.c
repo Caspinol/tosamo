@@ -2,9 +2,8 @@
 
 local_settings_t main_settings;
 
-CuSuite* TestConfigParserModule();
-
 void RunAllTests(void){
+	
 	CuString *output = CuStringNew();
 	CuSuite* suite = CuSuiteNew();
 	

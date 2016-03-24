@@ -13,8 +13,11 @@ scan_frequency = 5000
 my_ip = localhost
 
 # server ip with witch the file needs to be syncronised
-#remote_ip =192.168.177.25
-remote_ip = localhost
+remote_ip = 192.168.177.25
+remote_ip = 192.45.34.200
+remote_ip = 192.200.34.200
+remote_ip = 192.45.34.201
+remote_ip = 192.50.0.203
 
 # Send traffic over this port
 port = 9666

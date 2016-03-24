@@ -139,7 +139,7 @@ int to_data_serialize(to_packet_t * packet){
 #undef DOT
 
 /* Stop it from while-ing indefinitely in case of missing '\x1f' */
-#define FIND_COMMA() while(*(here++) != '\x1f' && (here - packet->raw_data) < packet->raw_data_len);
+#define FIND_COMMA() while(*(here++) != '\x1f' && (size_t)(here - packet->raw_data) < packet->raw_data_len);
 
 int to_data_deserialize(to_packet_t * packet){
 

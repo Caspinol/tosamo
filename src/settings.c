@@ -34,12 +34,15 @@ void print_local_settings(void){
 	LOG_LEVEL2("runnning mode -> [%s]",
 		   (main_settings.running_mode == MASTER) ? "MASTER" : "SLAVE");
 	LOG_LEVEL2("my_ip -> [%s]", main_settings.my_ip);
-	LOG_LEVEL2("remote_ip -> [%s]", main_settings.remote_ip);
 	LOG_LEVEL2("port -> [%s]", main_settings.port);
 	LOG_LEVEL2("tag -> [%s]", main_settings.tag);
 	LOG_LEVEL2("daemon mode -> [%s]", main_settings.daemonize ? "TRUE" : "FALSE");
 	LOG_LEVEL2("pid file path -> [%s]", main_settings.pid_file);
 	LOG_LEVEL2("file scan freq -> [%d]", main_settings.scan_frequency);
+	LOG_LEVEL2("Slaves:");
+	for(int i = 0; i < main_settings.remote_ip_count; i++){
+		LOG_LEVEL2("\t[%s]", main_settings.remote_ip[i]);
+	}
 }
 
 int to_parse_local_settings(char *file){
@@ -58,14 +61,18 @@ int to_parse_local_settings(char *file){
 	}
 	
 	while(fgets(line, LINE, settings_file) != NULL){
-		char key[KV_MAX_LEN] = {0}, value[KV_MAX_LEN] = {0};
+		
 		char *p = line;
 
 		while(isspace((int)*p)) p++;
-		if(*p == '#' || *p == ';' || *p == '\n') continue;
+		if(!*p || *p == '#' || *p == ';' || *p == '\n') continue;
 		
 		int i, j, eq;
 		for(i = 0; i < LINE; i++){
+
+			char key[KV_MAX_LEN] = {0},
+				value[KV_MAX_LEN] = {0};
+			
 			if(line[i] == '='){
 				//found the key...
 				memcpy(key, line, i);
@@ -89,16 +96,15 @@ int to_parse_local_settings(char *file){
 						break;
 					}
 				}
+				KV_PAIR * kv_pair = to_kvpair_create(key, strlen(key), value, strlen(value));
+				if(!kv_pair){
+					goto CLEANUP;
+				}
+				
+				to_list_push(settings, kv_pair);
 				break;
 			}
 		}
-
-		KV_PAIR * kv_pair = to_kvpair_create(key, strlen(key), value, strlen(value));
-		if(!kv_pair){
-			goto CLEANUP;
-		}
-
-		to_list_push(settings, kv_pair);
 	}
 
 	if(populate_main_settings()){
@@ -117,8 +123,8 @@ int to_parse_local_settings(char *file){
 
 static int validate_key(char const * key){
 	int i;
-        for(i = 0; allowed_keywords[i].keyword != NULL; i++){
-		if(!strncmp(key, allowed_keywords[i].keyword, strlen(key))){
+        for(i = 0; allowed_keywords[i].keyword; i++){
+		if(!strcmp(key, allowed_keywords[i].keyword)){
 			return 0;
 		}		
 	}
@@ -128,7 +134,8 @@ static int validate_key(char const * key){
 static int populate_main_settings(void){
 
 	KV_PAIR *pair = NULL;
-	
+
+	/* Required */
 	pair = to_list_find(settings, "mode");
 	if(!pair) return -1;
 	main_settings.running_mode = (strncmp(pair->value, "master", strlen("master"))==0) ? MASTER : SLAVE;
@@ -136,10 +143,6 @@ static int populate_main_settings(void){
 	pair = to_list_find(settings, "my_ip");
 	if(!pair) return -1;
 	strncpy(main_settings.my_ip, pair->value, pair->vlen);
-	
-	pair = to_list_find(settings, "remote_ip");
-	if(!pair) return -1;
-	strncpy(main_settings.remote_ip, pair->value, pair->vlen);
 	
 	pair = to_list_find(settings, "port");
 	if(!pair) return -1;
@@ -161,25 +164,43 @@ static int populate_main_settings(void){
 	if(!pair) return -1;
 	strncpy(main_settings.pid_file, pair->value, pair->vlen);
 
+	
+	/* We also allow multiple slaves */
+	main_settings.remote_ip_count = to_list_get_count(settings, "remote_ip");
+	main_settings.remote_ip = malloc(main_settings.remote_ip_count * sizeof(*main_settings.remote_ip));
+	if(!main_settings.remote_ip){
+		fprintf(stderr, "No memory\n");
+		return -1;
+	}
+	int obj_count = 0;
+	do{
+
+		pair = to_list_get(settings, "remote_ip");
+		if(!pair) return -1;
+
+		strcpy(main_settings.remote_ip[obj_count], pair->value);
+		to_kvpair_destroy(pair);
+		obj_count++;
+
+	}while(to_list_peek(settings, "remote_ip") && obj_count < main_settings.remote_ip_count);
+
+	
 	/* We need to count how  many files we track */
 	main_settings.object_count = to_list_get_count(settings, "object_file");
-
-	main_settings.object_path = malloc(main_settings.object_count * sizeof(char *));
-	if(!(main_settings.object_path)){
-		fprintf(stderr, "No memory for object_file array\n");
+	main_settings.object_path = malloc(main_settings.object_count * sizeof(*main_settings.object_path));
+	if(!main_settings.object_path){
+		fprintf(stderr, "No memory\n");
 		return -1;
 	}
 
-	int obj_count = 0;
+
+	obj_count = 0;
 	do{
 
 		pair = to_list_get(settings, "object_file");
 		if(!pair) return -1;
 
-		main_settings.object_path[obj_count] = malloc(pair->vlen * sizeof(char) + 1);
-		strncpy(main_settings.object_path[obj_count], pair->value, pair->vlen);
-		main_settings.object_path[obj_count][pair->vlen] = '\0';
-		
+		strcpy(main_settings.object_path[obj_count], pair->value);
 		to_kvpair_destroy(pair);
 		obj_count++;
 
@@ -190,11 +211,8 @@ static int populate_main_settings(void){
 
 void to_cleanup_settings(void){
 
-	for(int i = 0; i < main_settings.object_count; i++){
-		free(main_settings.object_path[i]);
-	}
-
 	free(main_settings.object_path);
+	free(main_settings.remote_ip);
 
 	main_settings.object_count = 0;
 }

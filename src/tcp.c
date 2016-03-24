@@ -164,7 +164,7 @@ int to_tcp_remote_connect(char const * ip, char const * port){
 
 int to_tcp_send_packet(to_packet_t * packet){
   	
-	int n, total_bytes = 0;
+	size_t n, total_bytes = 0;
 	int bytes_left = 0;
 
 	LOG_LEVEL1("Serializing data");
@@ -179,7 +179,7 @@ int to_tcp_send_packet(to_packet_t * packet){
 	while(total_bytes < packet->raw_data_len){
 		
 		n = send(packet->socket, packet->raw_data, bytes_left, 0);
-		if(n == -1){
+		if(n == (size_t)-1){
 			break;
 		}
 		total_bytes += n;

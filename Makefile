@@ -40,7 +40,9 @@ LFLAGS 		+= -pthread
 endif
 
 # Compilation flags
-CFLAGS 		= -Wall -g -ggdb -std=gnu99
+CFLAGS 		= -Wall -Wextra -Wshadow -Wpedantic
+CFLAGS		+= -Wno-gnu-zero-variadic-macro-arguments
+CFLAGS		+= -g -ggdb -std=gnu99
 CFLAGS		+= $(INC) $(DEFINE)
 
 TCFLAGS		= -Wall -g -ggdb -std=gnu9

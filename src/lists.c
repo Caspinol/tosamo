@@ -19,9 +19,9 @@ KV_PAIR *to_kvpair_create(char *key, size_t klen, char *value, size_t vlen){
 		return NULL;
 	}
 	
-	memcpy(b->key, key, klen);
+	strncpy(b->key, key, klen);
 	b->key[klen] = '\0';
-	memcpy(b->value, value, vlen);
+	strncpy(b->value, value, vlen);
 	b->value[vlen] = '\0';
 	
 	b->vlen = vlen;
@@ -38,11 +38,14 @@ void to_kvpair_destroy(KV_PAIR *pair){
 
 /* Some defaut implementation of compare and delete functions */
 static void default_data_del(void *data){
-	return to_kvpair_destroy((KV_PAIR *)data);
+	to_kvpair_destroy((KV_PAIR *)data);
 }
 
 static bool default_data_cmp(void *c1, void *c2){
-	char * p1 = (char *)c1;
+
+	if(!c1 || !c2) return false;
+	
+	char * p1 = ((KV_PAIR *)c1)->key;
 	char * p2 = (char *)c2;
 
 	if(!strcmp(p1, p2)){
@@ -60,7 +63,7 @@ static bool default_data_cmp(void *c1, void *c2){
   or NULL if unsuccessfull
  */
 L_HEAD *to_list_create(list_data_delete data_del, list_data_compare data_cmp){
-	L_HEAD *head;
+	L_HEAD *head = NULL;
 
 	head = malloc(1 * sizeof(L_HEAD));
 	if(!head) return NULL;
@@ -93,17 +96,18 @@ L_HEAD *to_list_create(list_data_delete data_del, list_data_compare data_cmp){
   The node that is replaced is destroyed(free) in result
 */
 void to_list_replace(L_HEAD *head, void *pair){
-	KV_PAIR *p;
+	KV_PAIR *p = NULL;
 	KV_PAIR *pp = pair;
-	
-	for(L_NODE *n = head->node; n; n=n->next){
+	L_NODE *n = head->node;
+	while(n){
 		p = n->data;
-		if(head->data_cmp(p->key, pp->key)){
+		if(head->data_cmp(p, pp->key)){
 			/* we have match */
 			head->data_del(p);
 			n->data = pp;
 			break;
 		}
+		n = n->next;
 	}
 }
 
@@ -115,20 +119,23 @@ void to_list_push(L_HEAD *head, void *data){
 	}else{
 		while(n->next) n=n->next; /* fast forward to last node */
 		
-		L_NODE *nn = calloc(1, sizeof(L_NODE));
+		L_NODE *nn = malloc(sizeof(L_NODE));
+		memset(nn, 0, sizeof(L_NODE));
 		nn->data = data;
 		nn->next = NULL;
 		n->next = nn;
 	}
 	head->count++;
+	//fprintf(stderr, "Currently [%d] elements in head\n", head->count);
 }
 
 bool to_list_peek(L_HEAD *head, void *key){
-	for(L_NODE *n = head->node; n; n = n->next){
-		KV_PAIR *p = n->data;
-		if(head->data_cmp(p->key, key)){
+	L_NODE *n = head->node;
+	while(n && n->data){
+		if(head->data_cmp(n->data, key)){
 			return true;
 		}
+		n = n->next;
 	}
 	return false;
 }
@@ -136,12 +143,13 @@ bool to_list_peek(L_HEAD *head, void *key){
 /* Returns number of elements with given key */
 int to_list_get_count(L_HEAD *head, void *key){
 	int count = 0;
-
-	for(L_NODE *n = head->node; n; n = n->next){
-		KV_PAIR *p = n->data;
-		if(head->data_cmp(p->key, key)){
+	L_NODE *n = head->node;
+		
+	while(n){
+		if(head->data_cmp(n->data, key)){
 			count++;
 		}
+		n = n->next;
 	}
 	return count;
 }
@@ -149,9 +157,8 @@ int to_list_get_count(L_HEAD *head, void *key){
 /* Returns node without removing it from list */
 void * to_list_find(L_HEAD *head, void *key){
 	for(L_NODE *n=head->node; n; n=n->next){
-		KV_PAIR *p = n->data;
-		if(head->data_cmp(p->key, key)){
-			return p;
+		if(head->data_cmp(n->data, key)){
+			return n->data;
 		}
 	}
 	return NULL;
@@ -163,8 +170,8 @@ void * to_list_get(L_HEAD *head, void *key){
 	L_NODE *curr = head->node;
 	while(curr){
 		/* Keep the pointer to object we want to return */
-		KV_PAIR *p = curr->data;
-		if(head->data_cmp(p->key, key)){
+		void *p = curr->data;
+		if(head->data_cmp(curr->data, key)){
 		        if(prev){
 				prev->next = curr->next;
 			}else{
@@ -211,7 +218,7 @@ size_t to_list_2_buf(L_HEAD *head, char **buffer){
 
 void to_list_destroy(L_HEAD *head){
 	L_NODE *n = head->node;
-	L_NODE *nn;
+	L_NODE *nn = NULL;
 	while (n){
 		nn = n->next;
 		head->data_del(n->data);
