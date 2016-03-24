@@ -156,10 +156,12 @@ int to_list_get_count(L_HEAD *head, void *key){
 
 /* Returns node without removing it from list */
 void * to_list_find(L_HEAD *head, void *key){
-	for(L_NODE *n=head->node; n; n=n->next){
+	L_NODE *n=head->node;
+	while(n){
 		if(head->data_cmp(n->data, key)){
 			return n->data;
 		}
+		n = n->next;
 	}
 	return NULL;
 }

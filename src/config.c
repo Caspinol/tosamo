@@ -1,21 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <stdbool.h>
-
-#include "include/log.h"
-#include "include/utils.h"
-#include "include/lists.h"
 #include "include/config.h"
-
-typedef enum {
-	
-	GOODTAG,
-	NOOPENTAG,
-	NOCLOSETAG
-  
-}TAG_RESULT;
 
 static size_t file_to_buffer(FILE *, char *, size_t);
 static L_HEAD * obj_buffer_chop(char *, int, char *, bool);
