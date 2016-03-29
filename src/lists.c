@@ -1,7 +1,7 @@
 #include "include/lists.h"
 
 KV_PAIR *to_kvpair_create(char *key, size_t klen, char *value, size_t vlen){
-	KV_PAIR *b = malloc(sizeof(KV_PAIR));
+	KV_PAIR *b = malloc(sizeof(*b));
 	if(!b){
 		to_log_err("Cannot malloc() the KV_PAIR - exiting");
 		return NULL;
@@ -65,10 +65,10 @@ static bool default_data_cmp(void *c1, void *c2){
 L_HEAD *to_list_create(list_data_delete data_del, list_data_compare data_cmp){
 	L_HEAD *head = NULL;
 
-	head = malloc(1 * sizeof(L_HEAD));
+	head = malloc(1 * sizeof(*head));
 	if(!head) return NULL;
 	
-	head->node = calloc(1, sizeof(L_NODE));
+	head->node = calloc(1, sizeof(*head->node));
 	if(!head->node){
 		free(head);
 		return NULL;
@@ -119,8 +119,8 @@ void to_list_push(L_HEAD *head, void *data){
 	}else{
 		while(n->next) n=n->next; /* fast forward to last node */
 		
-		L_NODE *nn = malloc(sizeof(L_NODE));
-		memset(nn, 0, sizeof(L_NODE));
+		L_NODE *nn = malloc(sizeof(*nn));
+		memset(nn, 0, sizeof(*nn));
 		nn->data = data;
 		nn->next = NULL;
 		n->next = nn;

@@ -3,7 +3,7 @@
 UNAME		= $(shell uname)
 SYSTEM		= $(UNAME)
 
-RM		= /bin/rm
+RM		= /bin/rm -f
 
 CC		= gcc
 SIZE		= size
@@ -41,7 +41,7 @@ endif
 
 # Compilation flags
 CFLAGS 		= -Wall -Wextra -Wshadow
-CFLAGS		+= -g -ggdb -std=gnu99
+CFLAGS		+= -g -ggdb -std=gnu99 -O3
 CFLAGS		+= $(INC) $(DEFINE)
 
 TCFLAGS		= -Wall -g -ggdb -std=gnu9
@@ -85,7 +85,7 @@ $(TEST_DIR)/%.o: %.c
 $(TEST_DIR)/$(TEST_BIN_NAME): $(TOBJS) $(filter-out $(BUILD)/main.o, $(OBJS))
 	@echo "LD	-	$(TEST_BIN_NAME)"
 	@$(CC) $(LFLAGS) $^ -o $@
-	@echo "Tests build - run: make test"
+	@echo "Tests build - run: \"make test\""
 
 test:
 	$(TEST_DIR)/$(TEST_BIN_NAME)
@@ -114,10 +114,8 @@ uninstall:
 	@rm -f $(INSTALL_PFX)/sbin/$(BIN_NAME)
 	@echo "Removing init script"
 ifeq ($(UNAME), Darwin)
-	@echo "On OSX"
 	@rm -f /Library/LaunchDaemons/net.catdamnit.tosamod.plist
 else
-	@echo "On Linux"
 	@rm -f /etc/init.d/tosamod
 endif
 
@@ -129,8 +127,10 @@ upgrade:
 clean:
 	@echo "Deleting *.o files"
 	@$(RM) $(OBJS) $(TOBJS) | true
+	@$(RM) -r $(BUILD) | true
 	@echo "Deleting $(BIN_NAME) binary"
 	@$(RM) $(BIN_DIR)/$(BIN_NAME) | true
+	@$(RM) -r $(BIN_DIR)/ | true
 	@echo "Deleting test binary"
 	@$(RM) $(TEST_DIR)/$(TEST_BIN_NAME) | true
 	@echo "Cleanup complete!"

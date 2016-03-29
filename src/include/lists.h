@@ -11,9 +11,9 @@
 
 
 typedef struct kv_pair{
-	char * key;
-	char * value;
 	size_t vlen; /* Length of value */
+	char * value;
+	char * key;
 }KV_PAIR;
 
 typedef struct cf_node{
@@ -25,10 +25,10 @@ typedef void (*list_data_delete)(void *data);
 typedef bool (*list_data_compare)(void *c1, void *c2);
 
 typedef struct l_head{
-	struct cf_node * node;
 	int count; /* Number of elements in the list */
 	list_data_delete data_del;
 	list_data_compare data_cmp;
+	struct cf_node * node;
 }L_HEAD;
 
 KV_PAIR *to_kvpair_create(char *, size_t, char *, size_t);

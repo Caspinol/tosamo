@@ -38,22 +38,24 @@ typedef enum {
 
 typedef struct local_settings_t{
 	
-	running_mode_e running_mode;                   /* Are we master or slave */
+	int            log_level;                   
+	int            scan_frequency;                 /* How often we send updates */
+
+	int            remote_ip_count;
+	int            object_count;                   /* How many files we need to keep track */
+	bool           daemonize;                      /* Should we run as daemon */
+
+	char           (*remote_ip)[INET6_ADDRSTRLEN]; /* Where do we send/recv the updates */
+	char           (*object_path)[OBJ_PATH_LEN];   /* File we want to syncronise */
 
 	char           my_ip[INET6_ADDRSTRLEN];        /* IP we want to bind to */ 
 	char           port[INET_PORTSTRLEN];
-	char           (*remote_ip)[INET6_ADDRSTRLEN]; /* Where do we send/recv the updates */
-	int            remote_ip_count;
-	
-	char           (*object_path)[OBJ_PATH_LEN];   /* File we want to syncronise */
-	int            object_count;                   /* How many files we need to keep track */
 	
 	char           tag[TAG_LEN];                   /* Pattern to mark the parts to sync */
-	int            scan_frequency;                 /* How often we send updates */
-	int            log_level;                   
 
-	bool           daemonize;                      /* Should we run as daemon */
 	char           pid_file[OBJ_PATH_LEN];         /* Where do we store the pid file */
+
+	running_mode_e running_mode;                   /* Are we master or slave */
 	
 }local_settings_t;
 
